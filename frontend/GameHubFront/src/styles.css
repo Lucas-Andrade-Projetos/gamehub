@@ -1,1 +1,93 @@
 @import "tailwindcss";
+
+@theme {
+
+    --animate-border-spin: border-spin 1s linear infinite;
+
+    @keyframes border-spin {
+        100% {
+            transform: rotate(-360deg);
+        }
+    }
+}
+
+@theme {
+
+    --animate-landing-object: landing-object 1s linear both;
+
+    @keyframes landing-object {
+        0% {
+            scale: 120%;
+            transform: translateY(-50%);
+        }
+        100% {
+            scale: 100%;
+            transform: translateY(0%);
+        }
+    }
+}
+
+@theme {
+
+    --animate-fence-walk: fence-walk 20s linear infinite;
+
+    @keyframes fence-walk {
+        0% {
+            transform: translateX(-50%);
+        }
+        100% {
+            transform: translateX(0%);
+        }
+    }
+}
+
+@theme {
+
+    --animate-grass-walk: grass-walk 24s linear infinite;
+
+    @keyframes grass-walk {
+        0% {
+            transform: translateX(-50%);
+        }
+        100% {
+            transform: translateX(0%);
+        }
+    }
+}
+
+@layer components {
+    .nav-link:hover {
+        @apply select-none transition-all duration-300 hover:border hover:rounded-full hover:px-2 
+        hover:py-1 hover:shadow-lg hover:bg-linear-to-tl from-white/15 to-transparent hover:backdrop-blur-lg
+    }
+
+    .rainbow-border-spin-after {
+        @apply hover:after:[background:conic-gradient(transparent_10%,red,orange,yellow,green,blue,indigo,violet,transparent_70%)]
+            hover:after:animate-border-spin
+            hover:after:content-['']
+            after:animate-border-spin
+            after:absolute
+            after:inset-0
+            after:z-0
+            after:w-[300%]
+            after:h-[300%]
+            after:-left-full
+            after:-top-full
+    }
+
+    .fence {
+        background-image: url('/cerca.png');
+        background-repeat: repeat-x;
+        width: calc(1/2 * 100%);
+        background-size: contain;
+        background-position: bottom;
+    }
+
+    .grass {
+        background-image: url('/grama.png');
+        background-repeat: repeat-x;
+        width: calc(1/2 * 100%);
+        background-size: contain;
+        background-position: bottom;
+    }
+}
