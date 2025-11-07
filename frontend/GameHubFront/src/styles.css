@@ -1,8 +1,45 @@
 @import "tailwindcss";
 
-@theme {
 
-    --animate-border-spin: border-spin 1s linear infinite;
+@font-face {
+    font-family: Duality;
+    src: url('/fonts/duality.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: CreatoDisplayRegular;
+    src: url('/fonts/CreatoDisplay-Regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: CreatoDisplayMedium;
+    src: url('/fonts/CreatoDisplay-Medium.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@theme {
+  --font-creato-display-regular: "CreatoDisplayRegular", sans-serif; 
+}
+
+
+@theme {
+  --font-creato-display-medium: "CreatoDisplayMedium", sans-serif; 
+}
+
+@theme {
+  --font-duality: "Duality", sans-serif; 
+}
+
+@theme {
+    --animate-border-spin: border-spin 3s linear infinite;
 
     @keyframes border-spin {
         100% {
@@ -12,8 +49,73 @@
 }
 
 @theme {
+    --animate-apply-skew: apply-skew 0.7s linear both;
 
-    --animate-landing-object: landing-object 1s linear both;
+    @keyframes apply-skew {
+        0% {
+            transform: skewX(0deg);
+        }
+        25%,
+        100% {
+            transform: skewX(-45deg);
+        }
+    }
+}
+
+@theme {
+    --animate-unmoved-skew: unmoved-skew 0.7s linear both;
+
+    @keyframes unmoved-skew {
+        0% {
+            transform: skewX(0deg);
+        }
+        25%,
+        100% {
+            transform: skewX(45deg);
+        }
+    }
+}
+
+@theme {
+    --animate-sudden-selection: sudden-selection 1s linear;
+
+    @keyframes sudden-selection {
+        0% {
+            scale: 80%;
+        }
+        7% {
+            scale:100%;
+        }
+    }
+}
+
+@theme {
+    --animate-rotate-landing: rotate-landing 1s linear both;
+
+    @keyframes rotate-landing {
+        0% {
+            scale: 0%;
+            transform: rotate(360deg);
+        }
+        100% {
+            scale: 100%;
+        }
+    }
+}
+
+@theme {
+    --animate-sun-ring-spin: sun-ring-spin 5s linear infinite;
+
+    @keyframes sun-ring-spin {
+        100% {
+            transform: rotate(-360deg);
+        }
+    }
+}
+
+/* @theme {
+
+--animate-landing-object: landing-object 1s linear both;
 
     @keyframes landing-object {
         0% {
@@ -25,9 +127,9 @@
             transform: translateY(0%);
         }
     }
-}
+} */
 
-@theme {
+ @theme {
 
     --animate-fence-walk: fence-walk 20s linear infinite;
 
@@ -43,48 +145,72 @@
 
 @theme {
 
-    --animate-grass-walk: grass-walk 24s linear infinite;
+    --animate-grass-walk: grass-walk 8s linear infinite;
 
     @keyframes grass-walk {
         0% {
-            transform: translateX(-50%);
+            transform: translateX(-20%);
         }
         100% {
-            transform: translateX(0%);
+            transform: translateX(-50%);
         }
     }
 }
 
 @layer components {
+
+    .nav-link {
+        @apply select-none transition-all duration-300
+    }
+
     .nav-link:hover {
-        @apply select-none transition-all duration-300 hover:border hover:rounded-full hover:px-2 
-        hover:py-1 hover:shadow-lg hover:bg-linear-to-tl from-white/15 to-transparent hover:backdrop-blur-lg
+        @apply -rotate-10 translate-y-1.5 scale-105 shadow-2xl animate-apply-skew
+        -bg-linear-15 from-white from-50% to-transparent to-50%
     }
 
-    .rainbow-border-spin-after {
+    .nav-text {
+        @apply font-duality tracking-wide text-[25px] text-shadow-[40px] transition-all duration-200
+    }
+
+    .nav-text:hover {
+        @apply pr-1 group-hover:-translate-x-2 animate-unmoved-skew text-black
+    }
+
+    .rainbow-border-spin {
         @apply hover:after:[background:conic-gradient(transparent_10%,red,orange,yellow,green,blue,indigo,violet,transparent_70%)]
-            hover:after:animate-border-spin
-            hover:after:content-['']
-            after:animate-border-spin
-            after:absolute
-            after:inset-0
-            after:z-0
-            after:w-[300%]
-            after:h-[300%]
-            after:-left-full
-            after:-top-full
+            hover:after:animate-border-spin hover:after:content-[''] after:animate-border-spin after:absolute 
+            after:inset-0 after:z-0 after:w-[300%] after:h-[300%] after:-left-full after:-top-full
     }
 
-    .fence {
-        background-image: url('/cerca.png');
-        background-repeat: repeat-x;
-        width: calc(1/2 * 100%);
-        background-size: contain;
+    .bgImg {
+        background-image: url('/images/bgImg.jpg');
+        background-position: top;
+        background-size: cover;
+    }
+
+    .navBgImg {
+        background-image: url('/images/navBgImg.png');
         background-position: bottom;
+        width: 100%;
+    }
+
+    .navBg {
+        background-image: url('/images/navBg.png');
+        background-position: 15%;
+        width: 100%;
+        background-size: cover;
+    }
+
+    .barn {
+        background-image: url('/images/barn.png');
+        width: calc(1/2 * 100%);
+        background-repeat: no-repeat;
+        background-position: bottom;
+        background-size: contain;
     }
 
     .grass {
-        background-image: url('/grama.png');
+        background-image: url('/images/grama.png');
         background-repeat: repeat-x;
         width: calc(1/2 * 100%);
         background-size: contain;

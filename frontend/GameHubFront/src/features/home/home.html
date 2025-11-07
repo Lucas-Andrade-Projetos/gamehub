@@ -1,26 +1,35 @@
-<div class="h-screen w-screen overflow-hidden">
-    <div class="grid grid-cols-2 w-full h-full items-center bg-[#F1AA52]">
-        <div class="flex flex-col gap-3 max-w-1/2 ml-[25%]">
-            <h1 class="text-5xl select-none">
-                Bem-vindo ao Gamehub da Fazenda!
-            </h1>
-            <h3 class="text-2xl select-none">Passe o mouse em um dos minigames
-                da barra de navegação para visualizar
-                melhor!</h3>
+<div class="screen h-screen w-screen overflow-hidden">
+    <div class="screen-grid pt-8 grid grid-cols-2 w-full h-full place-items-center bgImg">
+        <div class="left-column  flex flex-col gap-3 w-fit items-end">
+            <div class="page-title flex flex-col w-fit items-center">
+                <h1 class="font-duality text-9xl select-none text-center tracking-wide">
+                    Fazenda
+                </h1>
+                <h1 class="font-duality text-9xl select-none text-center tracking-widest">
+                    HUB
+                </h1>
+            </div>
+            <div class="page-information max-w-[52%]">
+                <h3 class="text-white text-left text-[20px] font-creato-display-medium select-none">
+                    Passe o mouse em um dos minigames
+                    da barra de navegação para visualizar
+                    melhor!
+                </h3>
+            </div>
         </div>
-        <div class="flex relative w-[165%] h-full">
-            <div class="absolute w-full h-full bg-linear-to-l from-transparent from-50% to-[#F1AA52] to-90%"></div>
-            <img class="w-full h-full" src="/vakinha.jpg" alt="vakinha">
+        <div class="right-column flex items-center select-none w-full h-full animate-rotate-landing">
+            <img class="absolute w-1/24 left-[55%] top-[30%] rotate-25 select-none animate-bounce"
+                src="/images/exclamacao.png" alt="ExclamationPoint">
+            <img class="w-[70%] select-none" src="/images/vakinha.gif" alt="CowGif">
         </div>
     </div>
-    <div class="absolute bottom-0 left-0 w-full h-1/7 overflow-hidden">
-        <div class="flex absolute -bottom-6 w-[200%] h-full animate-grass-walk">
-            <div class="grass w-full animate-landing-object"></div>
-            <div class="grass w-full animate-landing-object"></div>
+
+    <footer class="footer select-none">
+        <div class="absolute bottom-0 left-0 overflow-hidden w-full h-1/4">
+            <div class="flex relative top-1/4 justify-between w-full h-full">
+                <img src="/images/cerca.png" class="blur-xs" alt="">
+                <img src="/images/cerca.png" class="blur-xs" alt="">
+            </div>
         </div>
-        <div class="flex relative w-[200%] h-full animate-fence-walk">
-            <div class="fence w-full backdrop-blur-[1px] animate-landing-object"></div>
-            <div class="fence w-full backdrop-blur-[1px] animate-landing-object"></div>
-        </div>
-    </div>
+    </footer>
 </div>
