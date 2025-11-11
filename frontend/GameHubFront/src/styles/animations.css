@@ -1,0 +1,112 @@
+/* special effects */
+
+@keyframes border-spin {
+    to {
+        transform: rotate(-360deg);
+    }
+}
+
+@keyframes apply-skew {
+    0% {
+        transform: skewX(0deg);
+    }
+
+    25%,
+    100% {
+        transform: skewX(-45deg);
+    }
+}
+
+@keyframes unmoved-skew {
+    0% {
+        transform: skewX(0deg);
+    }
+
+    25%,
+    100% {
+        transform: skewX(45deg);
+    }
+}
+
+
+/* IN animations */
+
+@keyframes header-in {
+    0% {
+        transform: translateY(-150%);
+    }
+
+    10% {
+        transform: translateY(0);
+    }
+
+    12% {
+        transform: translateY(-10%);
+    }
+
+    15% {
+        transform: translateY(0);
+    }
+}
+
+@keyframes fence-in {
+    0% {
+        transform: translateY(150%);
+    }
+
+    10% {
+        transform: translateY(0);
+    }
+
+    12% {
+        transform: translateY(-10%);
+    }
+
+    15% {
+        transform: translateY(0);
+    }
+}
+
+@keyframes rotate-in {
+    0% {
+        scale: 0;
+        transform: rotate(360deg);
+    }
+
+    100% {
+        scale: 1;
+    }
+}
+
+@keyframes slide-in-right {
+    0% {
+        transform: translateX(-200%) skewX(-45deg);
+    }
+    5% {
+        transform: translateX(0%) skewX(0deg);
+    }
+    15% {
+        transform: translateY(-200%) translateX(-200%) skewX(5deg) rotate(180deg);
+    }
+    20%,50% {
+        opacity: 0%;
+    }
+    35% {
+        transform: translateY(0%) translateX(0%) skewX(0deg) rotate(0deg);
+    }
+    70% {
+        opacity: 100%;
+    }
+}
+
+/* walking img animation */
+
+@keyframes grass-walk {
+    from {
+        transform: translateX(-20%);
+    }
+
+    to {
+        transform: translateX(-50%);
+    }
+}

@@ -1,0 +1,54 @@
+@layer components {
+
+    .nav-link {
+        @apply select-none transition-all duration-300
+    }
+
+    .nav-link:hover {
+        @apply -rotate-10 translate-y-1.5 scale-105 shadow-2xl animate-apply-skew
+        -bg-linear-15 from-white from-50% to-transparent to-50%
+    }
+
+    .nav-text {
+        @apply font-duality tracking-wide text-[25px] text-shadow-[40px] transition-all duration-200
+    }
+
+    .nav-text:hover {
+        @apply pr-1 group-hover:-translate-x-2 animate-unmoved-skew text-black group-hover:cursor-pointer
+    }
+
+    .rainbow-border-spin {
+        @apply hover:after:[background:conic-gradient(transparent_10%,red,orange,yellow,green,blue,indigo,violet,transparent_70%)]
+            hover:after:animate-border-spin hover:after:content-[''] after:animate-border-spin after:absolute 
+            after:inset-0 after:z-0 after:w-[300%] after:h-[300%] after:-left-full after:-top-full
+    }
+
+    .bgImg {
+        background-image: url('/images/bgImg.jpg');
+        background-position: top;
+        background-size: cover;
+    }
+
+    .navBg {
+        background-image: url('/images/navBg.png');
+        background-position: 15%;
+        width: 100%;
+        background-size: cover;
+    }
+
+    .barn {
+        background-image: url('/images/barn.png');
+        width: calc(1/2 * 100%);
+        background-repeat: no-repeat;
+        background-position: bottom;
+        background-size: contain;
+    }
+
+    .grass {
+        background-image: url('/images/grama.png');
+        background-repeat: repeat-x;
+        width: calc(1/2 * 100%);
+        background-size: contain;
+        background-position: bottom;
+    }
+}

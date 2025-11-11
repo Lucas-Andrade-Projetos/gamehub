@@ -1,0 +1,14 @@
+@theme {
+  --font-yusei: "Yusei Magic", sans-serif;
+  --font-duality: "Duality", sans-serif;
+
+  --animate-border-spin: border-spin 3s linear infinite;
+  --animate-apply-skew: apply-skew 0.7s linear both;
+  --animate-unmoved-skew: unmoved-skew 0.7s linear both;
+  --animate-header-in: header-in 5s linear both;
+  --animate-fence-in: fence-in 10s linear both;
+  --animate-rotate-in: rotate-in 1s linear both;
+  --animate-slide-in-right: slide-in-right 7s linear both;
+  --animate-fence-walk: fence-walk 20s linear infinite;
+  --animate-grass-walk: grass-walk 8s linear infinite;
+}

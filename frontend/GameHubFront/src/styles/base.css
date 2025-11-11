@@ -1,0 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Yusei+Magic&display=swap');
+@import "tailwindcss";
+
+@font-face {
+    font-family: Duality;
+    src: url('/fonts/duality.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
