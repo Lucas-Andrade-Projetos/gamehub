@@ -13,7 +13,7 @@ export class Tokens {
             new Chicken(10, 1, Direction.Centered), new Chicken(2, 1, Direction.Centered), new Chicken(3, 1, Direction.Centered),
             new Cow(1, 2, Direction.Right), 
             new Horse(1, 4, Direction.Down), new Horse(9, 3, Direction.Right),
-            new Bull(7, 4, Direction.Left), new Cow(4, 4, Direction.Right)
+            new Bull(5, 4, Direction.Right), new Cow(2, 4, Direction.Right)
         ];
     }
 }
