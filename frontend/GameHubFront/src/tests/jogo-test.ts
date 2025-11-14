@@ -1,6 +1,8 @@
-import { Tabuleiro } from "../batalhaRural/Tabuleiro";
-import { TabuleiroService } from "../batalhaRural/TabuleiroService";
-import { Tokens } from "../batalhaRural/Tokens";
+import { Board } from "../batalhaRural/entities/Board";
+import { BoardService } from "../batalhaRural/services/BoardService";
+import { Tokens } from "../batalhaRural/entities/Tokens";
 
-TabuleiroService.positionTokens(new Tabuleiro(10), new Tokens());
+let game = new BoardService();
+
+game.positionTokens(new Board(10), new Tokens());
 
