@@ -2,6 +2,7 @@ import { Direction } from "../../enums/Direction";
 import { Token } from "../Token";
 
 export class Chicken extends Token {
+    override name: string = "Chicken";
     override character: string = "c";
     override size: number = 1;
 

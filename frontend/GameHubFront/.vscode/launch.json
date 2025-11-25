@@ -15,6 +15,20 @@
       "request": "launch",
       "preLaunchTask": "npm: test",
       "url": "http://localhost:9876/debug.html"
+    },
+    {
+      "name": "Debug Jogo",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "ts-node",
+        "-P",
+        "${workspaceFolder}/tsconfig.test.json",
+        "${workspaceFolder}/src/tests/jogo-test.ts"
+      ],
+      "sourceMaps": true,
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

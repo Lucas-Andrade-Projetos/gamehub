@@ -1,8 +1,8 @@
 import { Board } from "../batalhaRural/entities/Board";
-import { BoardService } from "../batalhaRural/services/BoardService";
+import { GameService } from "../batalhaRural/services/GameService";
 import { Tokens } from "../batalhaRural/entities/Tokens";
 
-let game = new BoardService();
+let game = new GameService();
 
 game.positionTokens(new Board(10), new Tokens());
 
