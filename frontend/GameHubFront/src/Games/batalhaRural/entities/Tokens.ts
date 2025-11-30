@@ -10,10 +10,11 @@ export class Tokens {
 
     constructor() {
         this.tokenCollection = [
-            new Bull(10, 7, Direction.Left),new Chicken(5, 1, Direction.Centered), new Chicken(2, 1, Direction.Centered), new Chicken(3, 1, Direction.Centered),
-            new Cow(1, 2, Direction.Right),
-            new Horse(1, 4, Direction.Down), new Horse(9, 3, Direction.Right),
-            new Cow(6, 5, Direction.Left), 
+            new Chicken(0, 0, Direction.Centered), new Chicken(0, 0, Direction.Centered), new Chicken(0, 0, Direction.Centered),
+            new Bull(0, 0, Direction.Centered), 
+            new Cow(0, 0, Direction.Centered),
+            new Horse(0, 0, Direction.Centered), new Horse(0, 0, Direction.Centered),
+            new Cow(0, 0, Direction.Centered) 
         ];
     }
 }
