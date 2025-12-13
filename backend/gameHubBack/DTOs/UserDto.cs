@@ -1,0 +1,10 @@
+namespace gameHubBack.DTOs;
+
+public class UserDto
+{
+    public required string Id { get; set; }
+    public required string Nickname { get; set; }
+    public required string Password { get; set; }
+    public required string Email { get; set; }
+    public string ImageUrl { get; set; } = "";
+}

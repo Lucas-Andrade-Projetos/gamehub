@@ -4,4 +4,6 @@ import { GameService } from "../Games/batalhaRural/services/GameService";
 
 let game = new BatalhaRural();
 
+GameService.prepareGame(game);
+
 while (game.status == GameStatus.inProgress) GameService.refreshGame(game);

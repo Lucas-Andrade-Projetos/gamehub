@@ -1,21 +1,23 @@
 import { BatalhaRural } from "../entities/BatalhaRural";
-import { Player } from "../entities/Player";
 import { GameStatus } from "../enums/gameEnums/GameStatus";
 import { PlayerNum } from "../enums/gameEnums/PlayerNum";
-import { PlayerStatus } from "../enums/gameEnums/PlayerStatus";
 import { GameHelper } from "../helpers/GameHelper";
 import { Utils } from "../helpers/Utils";
 
 export class GameService {
 
-    static prepareGame(game: BatalhaRural, ) {
+    static prepareGame(game: BatalhaRural,) {
         game.status = GameStatus.Preparing;
 
-        const player = PlayerNum.Player1;
+        const player = game.players[0];
 
+        for (let i = 0; i < player.tokens.tokenCollection.length; i++) { // passando pelos tokens do player
+            const token = player.tokens.tokenCollection[i];
+            
+        }
     }
 
-    static startGame() {}
+    static startGame() { }
 
     static refreshGame(game: BatalhaRural) {
         GameHelper.positionTokens(game.players);
