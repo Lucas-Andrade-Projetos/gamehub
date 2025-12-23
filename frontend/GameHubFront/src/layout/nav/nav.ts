@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, output, signal } from '@angular/core';
+import { leftView } from '../../LeftView';
 
 @Component({
   selector: 'app-nav',
@@ -8,4 +9,9 @@ import { Component } from '@angular/core';
 })
 export class Nav {
 
+  enterClick = output<leftView>();
+
+  enterClicked() {
+    this.enterClick.emit('login');
+  }
 }

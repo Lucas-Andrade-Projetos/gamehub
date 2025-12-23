@@ -1,25 +1,9 @@
 <div class="screen h-screen w-screen overflow-hidden">
     <div class="screen-grid pt-8 grid grid-cols-2 w-full h-full place-items-center bgImg">
-        <div class="left-column flex-row-reverse place-items-end content-center w-full h-full">
-            <div class="absolute flex w-fit flex-col items-center gap-3 top-[35%] z-99999 transition-all duration-300 ease-out 
-            [text-shadow:3px_3px_10px_rgba(0,0,0,0.6)]" (mousemove)="onMouseMove($event)" (mouseleave)="onMouseLeave($event)">
-                <div class="page-title flex flex-col w-fit items-center animate-slide-in-right">
-                    <h1 class="font-duality text-9xl select-none text-center tracking-wide">
-                        Fazenda
-                    </h1>
-                    <h1 class="font-duality text-9xl select-none text-center tracking-widest">
-                        HUB
-                    </h1>
-                </div>
-                <div class="page-information max-w-[48%] animate-slide-in-right">
-                    <h3 class="text-white text-left text-[20px] font-yusei tracking-wide select-none">
-                        Passe o mouse em um dos minigames
-                        da barra de navegação para visualizar
-                        melhor!
-                    </h3>
-                </div>
-            </div>
+        <div class="left-column content-center w-full h-full">
+            <app-left-display [currentView]="currentView()" (viewToUpdate)="viewToUpdate.emit($event)"/>
         </div>
+
         <div class="right-column flex items-center select-none w-full h-full animate-rotate-in">
             <img class="absolute w-1/24 left-[55%] top-[30%] rotate-25 select-none animate-bounce"
                 src="/images/exclamacao.png" alt="ExclamationPoint">
