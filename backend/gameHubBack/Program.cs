@@ -1,18 +1,47 @@
+using System.Text;
 using gameHubBack;
+using gameHubBack.interfaces;
+using gameHubBack.services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
-var builder = WebApplication.CreateBuilder(args);
+internal class Program
+{
+    private static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllers();
-builder.Services.AddSingleton<Users>();
+        // Add services to the container.
+        builder.Services.AddControllers();
+        builder.Services.AddSingleton<Users>();
 
-var app = builder.Build();
+        builder.Services.AddCors();
+        builder.Services.AddScoped<ITokenService, TokenService>();
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            var tokenKey = builder.Configuration["TokenKey"]
+                ?? throw new Exception("TokenKey not found in configuration");
 
-// Configure the HTTP request pipeline.
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenKey)),
+                ValidateIssuer = false,
+                ValidateAudience = false
+            };
+        });
 
+        var app = builder.Build();
 
-app.UseHttpsRedirection();
+        // Configure the HTTP request pipeline.
+        app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
 
-app.MapControllers();
+        app.UseAuthentication();
+        app.UseAuthorization();
 
-app.Run();
+        app.MapControllers();
+
+        app.Run();
+    }
+}
