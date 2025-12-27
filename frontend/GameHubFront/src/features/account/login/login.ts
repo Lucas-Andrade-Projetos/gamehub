@@ -1,5 +1,5 @@
-import { Component, output, signal } from '@angular/core';
-import { leftView } from '../../../LeftView';
+import { Component, output } from '@angular/core';
+import { leftView } from '../../../types/LeftView';
 
 @Component({
   selector: 'app-login',

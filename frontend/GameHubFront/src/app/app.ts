@@ -1,7 +1,7 @@
 import { Component, input, output, signal } from '@angular/core';
 import { Nav } from "../layout/nav/nav";
 import { Home } from "../features/home/home";
-import { leftView } from '../LeftView';
+import { leftView } from '../types/LeftView';
 
 @Component({
   selector: 'app-root',

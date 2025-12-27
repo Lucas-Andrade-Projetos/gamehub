@@ -1,8 +1,8 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { Register } from '../../features/account/register/register';
 import { Login } from '../../features/account/login/login';
 import { WelcomingText } from '../welcoming-text/welcoming-text';
-import { leftView } from '../../LeftView';
+import { leftView } from '../../types/LeftView';
 
 @Component({
   selector: 'app-left-display',

@@ -1,6 +1,6 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { LeftDisplay } from "../../layout/left-display/left-display";
-import { leftView } from '../../LeftView';
+import { leftView } from '../../types/LeftView';
 
 @Component({
   selector: 'app-home',

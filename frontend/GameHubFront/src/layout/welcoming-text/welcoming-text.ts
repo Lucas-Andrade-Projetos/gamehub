@@ -1,6 +1,5 @@
 import { Component, output } from '@angular/core';
 
-type leftView = 'login' | 'register' | 'welcome';
 @Component({
   selector: 'app-welcoming-text',
   imports: [],
