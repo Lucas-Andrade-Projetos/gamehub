@@ -19,10 +19,6 @@ export class Register {
     this.viewTitle.emit('login');
   }
 
-  showWelcome() {
-    this.viewTitle.emit('welcome');
-  }
-
   register() {
     this.accountService.register(this.creds).subscribe({
       next: response => {
@@ -36,6 +32,6 @@ export class Register {
   }
 
   cancel() {
-    this.viewTitle.emit('login');
+    this.viewTitle.emit('welcome');
   }
 }

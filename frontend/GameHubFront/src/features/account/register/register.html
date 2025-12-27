@@ -1,15 +1,15 @@
-<div class="flex items-center justify-center  relative w-full h-1/2 bg-amber-600">
+<div class="flex items-center justify-center relative w-full h-1/2 bg-amber-600">
     <h1 class="text-5xl pr-20">
         REGISTRO
     </h1>
-    <div class="flex flex-col gap-4 justify-center w-1/2 bg-amber-500 h-full items-center">
-        <input class="w-full h-12 rounded bg-black" name="email" type="email" [(ngModel)]="creds.nickname"
+    <div class="flex flex-col gap-2 justify-around w-1/2 bg-amber-500 h-full items-center">
+        <input class="w-full h-12 rounded bg-white" name="nickname" type="text" [(ngModel)]="creds.nickname"
             placeholder="Apelido" />
-        <input class="w-full h-12 rounded bg-black" name="email" type="email" [(ngModel)]="creds.email"
+        <input class="w-full h-12 rounded bg-white" name="email" type="email" [(ngModel)]="creds.email"
             placeholder="E-mail" />
-        <input class="w-full h-12 rounded bg-black" name="password" type="password" [(ngModel)]="creds.password"
+        <input class="w-full h-12 rounded bg-white" name="password" type="password" [(ngModel)]="creds.password"
             placeholder="Senha" />
-        <input class="w-full h-12 rounded bg-black" name="password" type="password" [(ngModel)]="creds.confirmPassword"
+        <input class="w-full h-12 rounded bg-white" name="confirmPassword" type="password" [(ngModel)]="creds.confirmPassword"
             placeholder="Confirme a senha" />
 
         <button class="rounded cursor-pointer w-full h-12 bg-amber-300" (click)="register()">Registrar</button>

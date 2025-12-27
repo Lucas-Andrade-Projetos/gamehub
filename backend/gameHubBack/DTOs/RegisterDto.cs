@@ -15,4 +15,8 @@ public class RegisterDto
     [Required]
     [MinLength(7)]
     public required string Password { get; set; }
+
+    [Required]
+    [Compare(nameof(Password), ErrorMessage = "Passwords doesn't match")]
+    public required string ConfirmPassword { get; set; }
 }
