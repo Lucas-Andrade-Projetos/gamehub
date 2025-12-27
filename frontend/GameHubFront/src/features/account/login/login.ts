@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './login.css',
 })
 export class Login {
-    private accountService = inject(AccountService);
+  private accountService = inject(AccountService);
   viewTitle = output<leftView>();
   protected creds = {} as RegisterCreds;
 
