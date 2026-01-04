@@ -1,23 +1,22 @@
 using System.Security.Cryptography;
 using System.Text;
+using gameHubBack.Data;
 using gameHubBack.DTOs;
-using gameHubBack.entities;
-using gameHubBack.extensions;
-using gameHubBack.interfaces;
+using gameHubBack.Entities;
+using gameHubBack.Extensions;
+using gameHubBack.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace gameHubBack.controllers;
+namespace gameHubBack.Controllers;
 
 [ApiController]
 [Route("api/{controller}")]
-public class AccountController(Users users, ITokenService tokenService) : ControllerBase
+public class AccountController(AppDbContext context, ITokenService tokenService) : ControllerBase
 {
-    readonly private Users _users = users;
-
     [HttpPost("register")]
     public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
     {
-        if (_users.UserList.Any(x => x.Email.ToLower() == registerDto.Email.ToLower()))
+        if (context.Users.Any(x => x.Email.ToLower() == registerDto.Email.ToLower()))
             return Unauthorized("Email is already taken");
 
         using var hmac = new HMACSHA512();
@@ -30,7 +29,8 @@ public class AccountController(Users users, ITokenService tokenService) : Contro
             PasswordSalt = hmac.Key
         };
 
-        _users.UserList.Add(user);
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
 
         return user.ToDto(tokenService);
     }
@@ -38,7 +38,7 @@ public class AccountController(Users users, ITokenService tokenService) : Contro
     [HttpPost("login")]
     public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
     {
-        var user = _users.UserList.SingleOrDefault(u => u.Email == loginDto.Email);
+        var user = context.Users.SingleOrDefault(u => u.Email == loginDto.Email);
 
         if (user == null) return Unauthorized("Invalid email or password");
 

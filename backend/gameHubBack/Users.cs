@@ -1,5 +1,5 @@
 using System;
-using gameHubBack.entities;
+using gameHubBack.Entities;
 
 namespace gameHubBack;
 

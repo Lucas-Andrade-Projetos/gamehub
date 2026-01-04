@@ -1,8 +1,8 @@
 using gameHubBack.DTOs;
-using gameHubBack.entities;
-using gameHubBack.interfaces;
+using gameHubBack.Entities;
+using gameHubBack.Interfaces;
 
-namespace gameHubBack.extensions;
+namespace gameHubBack.Extensions;
 
 public static class AppUserExtensions
 {

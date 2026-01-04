@@ -1,9 +1,8 @@
-using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using gameHubBack.entities;
-using gameHubBack.interfaces;
+using gameHubBack.Entities;
+using gameHubBack.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 
 namespace gameHubBack.services;

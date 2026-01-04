@@ -1,8 +1,9 @@
 using System.Text;
-using gameHubBack;
-using gameHubBack.interfaces;
+using gameHubBack.Data;
+using gameHubBack.Interfaces;
 using gameHubBack.services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 internal class Program
@@ -13,7 +14,13 @@ internal class Program
 
         // Add services to the container.
         builder.Services.AddControllers();
-        builder.Services.AddSingleton<Users>();
+
+        builder.Services.AddDbContext<AppDbContext>(opt =>
+        {
+            opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
+        });
+
+        // builder.Services.AddSingleton<Users>();
 
         builder.Services.AddCors();
         builder.Services.AddScoped<ITokenService, TokenService>();

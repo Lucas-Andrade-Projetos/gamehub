@@ -1,7 +1,6 @@
-using System;
-using gameHubBack.entities;
+using gameHubBack.Entities;
 
-namespace gameHubBack.interfaces;
+namespace gameHubBack.Interfaces;
 
 public interface ITokenService
 {
