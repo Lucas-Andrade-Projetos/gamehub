@@ -1,21 +1,16 @@
-import { Component, inject, input, output } from '@angular/core';
-import { leftView } from '../../types/LeftView';
-import { AccountService } from '../../core/account-service';
+import { Component, inject, input } from '@angular/core';
+import { AccountService } from '../../core/services/account-service';
+import { RouterLink, RouterLinkActive } from "@angular/router";
 
 @Component({
   selector: 'app-nav',
-  imports: [],
+  imports: [RouterLink, RouterLinkActive],
   templateUrl: './nav.html',
   styleUrl: './nav.css',
 })
 export class Nav {
   protected accountService = inject(AccountService);
-  enterClick = output<leftView>();
   loggedIn = input<boolean>();
-
-  enterClicked() {
-    this.enterClick.emit('login');
-  }
 
   logout() {
     this.accountService.logout();

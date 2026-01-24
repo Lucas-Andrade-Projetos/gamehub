@@ -1,37 +1,27 @@
-import { Component, inject, output } from '@angular/core';
-import { leftView } from '../../../types/LeftView';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AccountService } from '../../../core/account-service';
+import { AccountService } from '../../../core/services/account-service';
 import { RegisterCreds } from '../../../types/user';
+import { RouterLink } from "@angular/router";
 
 @Component({
   selector: 'app-register',
-  imports: [FormsModule],
+  imports: [FormsModule, RouterLink],
   templateUrl: './register.html',
   styleUrl: './register.css',
 })
 export class Register {
   private accountService = inject(AccountService);
   protected creds = {} as RegisterCreds;
-  viewTitle = output<leftView>();
-
-  showLogin() {
-    this.viewTitle.emit('login');
-  }
 
   register() {
     this.accountService.register(this.creds).subscribe({
       next: response => {
         console.log(response);
-        this.cancel();
       },
       error: error => {
         console.log('Registration failed:', error);
       },
     })
-  }
-
-  cancel() {
-    this.viewTitle.emit('welcome');
   }
 }

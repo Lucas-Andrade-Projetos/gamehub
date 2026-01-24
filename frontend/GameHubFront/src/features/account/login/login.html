@@ -6,15 +6,15 @@
         <input class="w-full h-12 rounded bg-white" type="email" [(ngModel)]="creds.email" placeholder="E-mail" />
         <input class="w-full h-12 rounded bg-white" type="password" [(ngModel)]="creds.password" placeholder="Senha" />
 
-        <button class="rounded cursor-pointer w-full h-12 bg-amber-300" (click)="login()">Entrar</button>
+        <button class="rounded cursor-pointer w-full h-12 bg-amber-300">Entrar</button>
 
         <a class="hover:underline cursor-pointer">Esqueci minha senha</a>
 
         <div class="flex flex-row justify-around items-center w-[65%]">
             <span>Não tem uma conta?</span>
-            <a class="hover:underline cursor-pointer" (click)="showRegister()">Registre-se</a>
+            <a class="hover:underline cursor-pointer" routerLink="/register">Registre-se</a>
         </div>
-        <button class="cursor-pointer w-1/3 h-10 bg-amber-400 rounded text-xl" (click)="cancel()">
+        <button class="cursor-pointer w-1/3 h-10 bg-amber-400 rounded text-xl" routerLink="/welcome">
             Voltar
         </button>
     </div>

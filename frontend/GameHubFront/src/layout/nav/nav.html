@@ -54,15 +54,16 @@
             }
             @else {
                 <div class="btn-container group flex relative items-center justify-center w-fit z-2 overflow-hidden rounded 
-                                    transition-all hover:scale-110 rainbow-border-spin">
+                                    transition-all hover:scale-110 rainbow-border-spin" 
+                        routerLink="/login" 
+                        routerLinkActive="flex relative scale-110">
                     <div class="rainbow-border relative rounded p-0.5">
-                        <button (click)="enterClicked()"
+                        <button
                             class="login-btn flex relative px-10 py-2 z-10 rounded font-duality tracking-widest border-3
                                         bg-transparent transition-all duration-200 overflow-hidden select-none shadow-2xl
                                         group-hover:border-transparent group-hover:shadow-2xl group-hover:bg-amber-400 group-hover:cursor-pointer">
                             ENTRAR
-                            <div
-                                class="barn absolute left-0 bottom-0.5 -z-15 w-[30%] h-[80%] opacity-0 group-hover:opacity-100">
+                            <div class="barn absolute left-0 bottom-0.5 -z-15 w-[30%] h-[80%] opacity-0 group-hover:opacity-100">
                             </div>
                             <div class="grass-container flex absolute -z-10 -bottom-4 w-[200%] h-full animate-grass-walk">
                                 <div class="grass w-full opacity-0 group-hover:opacity-100"></div>

@@ -1,8 +1,7 @@
 import { Component, inject, input, output, signal } from '@angular/core';
 import { Nav } from "../layout/nav/nav";
 import { Home } from "../features/home/home";
-import { leftView } from '../types/LeftView';
-import { AccountService } from '../core/account-service';
+import { AccountService } from '../core/services/account-service';
 
 @Component({
   selector: 'app-root',
@@ -12,7 +11,6 @@ import { AccountService } from '../core/account-service';
 })
 export class App {
   protected readonly title = signal('GameHubFront');
-  currentView = signal<leftView>('welcome');
   private accountService = inject(AccountService)
 
   async ngOnInit() {
@@ -24,9 +22,5 @@ export class App {
     if (!userString) return;
     const user = JSON.parse(userString);
     this.accountService.currentUser.set(user);
-  }
-
-  updateView(view: leftView) {
-    this.currentView.set(view);
   }
 }

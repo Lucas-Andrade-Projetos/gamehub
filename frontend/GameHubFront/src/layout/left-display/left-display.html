@@ -1,7 +1,0 @@
-@if (currentView() == 'welcome') {
-  <app-welcoming-text />
-} @else if (currentView() == 'login') {
-  <app-login (viewTitle)="viewToUpdate.emit($event)" />
-} @else if (currentView() == 'register') {
-  <app-register (viewTitle)="viewToUpdate.emit($event)" />
-}

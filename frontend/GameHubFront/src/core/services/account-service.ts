@@ -1,5 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
-import { LoginCreds, RegisterCreds, User } from '../types/user';
+import { LoginCreds, RegisterCreds, User } from '../../types/user';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs';
 

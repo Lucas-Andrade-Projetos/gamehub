@@ -1,7 +1,7 @@
 <div class="screen h-screen w-screen overflow-hidden">
     <div class="screen-grid pt-8 grid grid-cols-2 w-full h-full place-items-center bgImg">
         <div class="left-column content-center w-full h-full">
-            <app-left-display [currentView]="currentView()" (viewToUpdate)="viewToUpdate.emit($event)"/>
+            <router-outlet />
         </div>
 
         <div class="right-column flex items-center select-none w-full h-full animate-rotate-in">
