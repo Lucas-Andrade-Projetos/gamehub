@@ -20,7 +20,7 @@
     .rainbow-border-spin {
         @apply hover:after:[background:conic-gradient(transparent_10%,red,orange,yellow,green,blue,indigo,violet,transparent_70%)]
             hover:after:animate-border-spin hover:after:content-[''] after:animate-border-spin after:absolute 
-            after:inset-0 after:z-0 after:w-[300%] after:h-[300%] after:-left-full after:-top-full
+            after:inset-0 after:z-0 after:w-[350%] after:h-[350%] after:-left-[125%] after:-top-[125%]
     }
 
     .bgImg {

@@ -1,12 +1,22 @@
-import { Component, output } from '@angular/core';
+import { Component, Inject, inject, output } from '@angular/core';
+import { Router } from '@angular/router';
+import { AccountService } from '../../core/services/account-service';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-welcoming-text',
-  imports: [],
+  imports: [NgClass],
   templateUrl: './welcoming-text.html',
   styleUrl: './welcoming-text.css',
 })
 export class WelcomingText {
+  router = inject(Router);
+  accountService = inject(AccountService);
+
+  isRouteAuth() {
+    return this.router.url !== '/login' && this.router.url !== '/register'
+  }
+
   onMouseMove(event: MouseEvent) {
     const element = event.currentTarget as HTMLElement;
     const position = element.getBoundingClientRect();

@@ -1,1 +1,0 @@
-export type leftView = 'login' | 'register' | 'welcome';

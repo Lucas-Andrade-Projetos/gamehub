@@ -1,10 +1,11 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
 import { AccountService } from '../../core/services/account-service';
-import { Router, RouterLink } from "@angular/router";
+import { Router, RouterOutlet } from "@angular/router";
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'app-nav',
-  imports: [RouterLink],
+  imports: [NgClass, RouterOutlet],
   templateUrl: './nav.html',
   styleUrl: './nav.css',
 })
@@ -13,8 +14,8 @@ export class Nav {
   router = inject(Router);
   loggedIn = input<boolean>();
 
-  state() {
-    return this.router.url !== '/welcome';
+  isRouteAuth() {
+    return this.router.url === '/login' || this.router.url === '/register';
   }
 
   logout() {

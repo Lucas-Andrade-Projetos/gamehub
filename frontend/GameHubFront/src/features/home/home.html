@@ -1,7 +1,7 @@
 <div class="screen h-screen w-screen overflow-hidden">
     <div class="screen-grid pt-8 grid grid-cols-2 w-full h-full place-items-center bgImg">
-        <div class="left-column content-center w-full h-full">
-            <router-outlet />
+        <div class="left-column flex justify-center items-center w-full h-full">
+            <app-welcoming-text />
         </div>
 
         <div class="right-column flex items-center select-none w-full h-full animate-rotate-in">
@@ -11,12 +11,5 @@
         </div>
     </div>
 
-    <footer class="footer select-none">
-        <div class="absolute bottom-0 left-0 overflow-hidden w-full h-1/4">
-            <div class="flex relative top-1/4 justify-between w-full h-full">
-                <img src="/images/cerca.png" class="blur-xs animate-fence-in" alt="FenceImg">
-                <img src="/images/cerca.png" class="blur-xs animate-fence-in" alt="FenceImg">
-            </div>
-        </div>
-    </footer>
+    <app-home-footer />
 </div>
