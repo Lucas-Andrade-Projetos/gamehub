@@ -1,0 +1,1 @@
+export type NavState = 'login' | 'register' | 'home';

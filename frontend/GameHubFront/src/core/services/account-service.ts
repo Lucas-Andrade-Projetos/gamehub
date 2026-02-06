@@ -2,12 +2,14 @@ import { inject, Injectable, signal } from '@angular/core';
 import { LoginCreds, RegisterCreds, User } from '../../types/user';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AccountService {
   private http = inject(HttpClient);
+  router = inject(Router);
   currentUser = signal<User | null>(null);
 
   baseUrl = 'https://localhost:5001/api/';
@@ -34,5 +36,6 @@ export class AccountService {
   logout() {
     localStorage.removeItem('user');
     this.currentUser.set(null);
+    this.router.navigate(['/login']);
   }
 }
