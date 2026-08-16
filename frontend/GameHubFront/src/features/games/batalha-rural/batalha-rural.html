@@ -1,2 +1,60 @@
-<p>batalha-rural works!</p>
-<button class="size-fit bg-amber-500" (click)="returnHome()">Voltar</button>
+<div class="batalha-rural-wrapper flex flex-col items-center gap-6 pt-40 pb-10 min-h-screen">
+
+    @if (!gameStarted()) {
+        <button
+            class="font-duality tracking-widest border-3 border-amber-700 rounded px-10 py-3 bg-transparent hover:bg-amber-400 transition-all duration-200 cursor-pointer"
+            (click)="startGame()">
+            INICIAR JOGO
+        </button>
+    } @else if (finalized()) {
+        <h2 class="font-duality text-3xl text-center">Posicionamento confirmado!</h2>
+        <p class="font-yusei text-center">Aguardando o próximo passo do jogo...</p>
+        <button class="font-duality tracking-wide border-2 border-amber-700 rounded px-4 py-2 cursor-pointer hover:bg-amber-400 transition-all"
+            (click)="returnHome()">
+            VOLTAR
+        </button>
+    } @else {
+        <h2 class="font-duality text-3xl tracking-wide select-none">{{ accountService.currentUser()?.nickname }}</h2>
+
+        <div class="flex flex-row items-start gap-6">
+            <div #boardGrid class="grid grid-cols-10 grid-rows-10 border-2 border-amber-800 w-[400px] h-[400px] select-none">
+                @for (y of boardRange; track y) {
+                    @for (x of boardRange; track x) {
+                        <div class="aspect-square flex items-center justify-center border border-amber-800/30 font-duality text-sm transition-colors"
+                            [class]="cellClass(x, y)">
+                            {{ cellChar(x, y) }}
+                        </div>
+                    }
+                }
+            </div>
+
+            <button
+                class="font-duality tracking-wide border-2 border-amber-700 rounded px-4 py-2 h-fit cursor-pointer hover:bg-amber-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                [disabled]="!allPlaced() || submitting()" (click)="finalizePlacement()">
+                @if (submitting()) {
+                    ENVIANDO...
+                } @else {
+                    FINALIZAR POSICIONAMENTO
+                }
+            </button>
+        </div>
+
+        @if (errorMessage()) {
+            <p class="text-red-600 font-yusei text-center">{{ errorMessage() }}</p>
+        }
+
+        <div class="flex flex-wrap gap-3 justify-center max-w-2xl">
+            @for (vm of tokenViewModels(); track vm.index) {
+                <div class="flex flex-col items-center gap-1 px-3 py-2 rounded border-2 border-amber-700 font-duality select-none transition-opacity"
+                    [class.opacity-40]="vm.placed" [class.cursor-grab]="!vm.placed"
+                    (mousedown)="onPieceMouseDown($event, vm.index)">
+                    <span class="text-2xl">{{ vm.token.character }}</span>
+                    <span class="text-xs">{{ vm.token.name }} ({{ vm.token.size }})</span>
+                    @if (vm.placed) {
+                        <span class="text-[10px] text-green-700">posicionado</span>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
