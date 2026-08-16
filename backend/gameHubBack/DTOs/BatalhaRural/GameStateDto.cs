@@ -6,5 +6,6 @@ public class GameStateDto
 {
     public required string Id { get; set; }
     public required GameStatus Status { get; set; }
+    public required PlayerNum ViewerPlayerNum { get; set; }
     public required List<PlayerStateDto> Players { get; set; }
 }

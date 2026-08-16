@@ -27,6 +27,7 @@ export interface PlayerStateDto {
 export interface GameStateDto {
   id: string;
   status: string;
+  viewerPlayerNum: ApiPlayerNum;
   players: PlayerStateDto[];
 }
 
@@ -50,14 +51,11 @@ export class BatalhaRuralService {
 
   baseUrl = 'https://localhost:5001/api/batalha-rural';
 
-  createGame(player1Nickname: string, player2Nickname: string) {
-    return this.http.post<GameStateDto>(this.baseUrl, { player1Nickname, player2Nickname });
+  getGame(gameId: string) {
+    return this.http.get<GameStateDto>(`${this.baseUrl}/${gameId}`);
   }
 
-  placeToken(gameId: string, playerNum: ApiPlayerNum, tokenIndex: number, body: PlaceTokenRequest) {
-    return this.http.post<PlaceTokenResultDto>(
-      `${this.baseUrl}/${gameId}/players/${playerNum}/tokens/${tokenIndex}/place`,
-      body
-    );
+  placeToken(gameId: string, tokenIndex: number, body: PlaceTokenRequest) {
+    return this.http.post<PlaceTokenResultDto>(`${this.baseUrl}/${gameId}/tokens/${tokenIndex}/place`, body);
   }
 }

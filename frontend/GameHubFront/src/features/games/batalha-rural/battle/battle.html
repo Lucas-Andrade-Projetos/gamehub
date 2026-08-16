@@ -1,0 +1,40 @@
+<div class="min-h-screen flex flex-col items-center pt-20 pb-10">
+    @if (errorMessage()) {
+        <p class="text-red-600 font-yusei text-center pt-20">{{ errorMessage() }}</p>
+    } @else if (!game()) {
+        <p class="font-yusei text-center pt-20">Carregando...</p>
+    } @else if (showingReveal()) {
+        <div class="fixed inset-0 flex items-center justify-center bg-black z-50">
+            <h1 class="font-duality text-5xl md:text-6xl text-white tracking-widest text-center uppercase px-6">
+                {{ ownPlayer()?.nickname }} <span class="text-amber-500">X</span> {{ opponentPlayer()?.nickname }}
+            </h1>
+        </div>
+    } @else {
+        <div class="flex flex-col md:flex-row gap-10 items-start justify-center w-full">
+            <div class="flex flex-col items-center gap-3">
+                <h3 class="font-duality text-xl uppercase select-none">{{ ownPlayer()?.nickname }} (você)</h3>
+                <div class="grid grid-cols-10 grid-rows-10 border-2 border-amber-800 w-[320px] h-[320px] select-none">
+                    @for (row of ownPlayer()?.board ?? []; track $index) {
+                        @for (cell of row; track $index) {
+                            <div class="aspect-square flex items-center justify-center border border-amber-800/30 font-duality text-xs"
+                                [class]="cell === 'O' ? 'bg-amber-100/40' : 'bg-stone-700 text-white'">
+                                {{ cell === 'O' ? '' : cell }}
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="flex flex-col items-center gap-3">
+                <h3 class="font-duality text-xl uppercase select-none">{{ opponentPlayer()?.nickname }}</h3>
+                <div class="grid grid-cols-10 grid-rows-10 border-2 border-amber-800 w-[320px] h-[320px] select-none">
+                    @for (row of opponentPlayer()?.board ?? []; track $index) {
+                        @for (cell of row; track $index) {
+                            <div class="aspect-square flex items-center justify-center border border-amber-800/30 font-duality text-xs bg-amber-100/40"></div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

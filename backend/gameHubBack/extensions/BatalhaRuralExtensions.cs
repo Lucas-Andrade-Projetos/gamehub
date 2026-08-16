@@ -6,26 +6,31 @@ namespace gameHubBack.Extensions;
 
 public static class BatalhaRuralExtensions
 {
-    public static GameStateDto ToDto(this BatalhaRuralGame game)
+    public static GameStateDto ToDto(this BatalhaRuralGame game, string viewerUserId)
     {
+        var viewer = game.Players.First(p => p.UserId == viewerUserId);
+
         return new GameStateDto
         {
             Id = game.Id,
             Status = game.Status,
-            Players = game.Players.Select(p => p.ToDto()).ToList()
+            ViewerPlayerNum = viewer.PlayerNum,
+            Players = game.Players.Select(p => p.ToDto(viewerUserId)).ToList()
         };
     }
 
-    public static PlayerStateDto ToDto(this BatalhaRuralPlayer player)
+    public static PlayerStateDto ToDto(this BatalhaRuralPlayer player, string viewerUserId)
     {
+        var isOwner = player.UserId == viewerUserId;
+
         return new PlayerStateDto
         {
             Id = player.Id,
             Nickname = player.Nickname,
             PlayerNum = player.PlayerNum,
             PlayerStatus = player.PlayerStatus,
-            Board = player.BoardTiles,
-            Tokens = player.Tokens.Select((token, index) => token.ToDto(index)).ToList()
+            Board = isOwner ? player.BoardTiles : CreateEmptyBoard(player.BoardTiles.Length),
+            Tokens = isOwner ? player.Tokens.Select((token, index) => token.ToDto(index)).ToList() : []
         };
     }
 
@@ -42,5 +47,18 @@ public static class BatalhaRuralExtensions
             PositionY = token.PositionY,
             Direction = token.Direction
         };
+    }
+
+    private static string[][] CreateEmptyBoard(int size)
+    {
+        var tiles = new string[size][];
+
+        for (var i = 0; i < size; i++)
+        {
+            tiles[i] = new string[size];
+            for (var j = 0; j < size; j++) tiles[i][j] = "O";
+        }
+
+        return tiles;
     }
 }

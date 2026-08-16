@@ -1,9 +1,11 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using gameHubBack.Data;
+using gameHubBack.Hubs;
 using gameHubBack.Interfaces;
 using gameHubBack.services;
 using gameHubBack.Services.BatalhaRural;
+using gameHubBack.Services.Rooms;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -28,8 +30,10 @@ internal class Program
         // builder.Services.AddSingleton<Users>();
 
         builder.Services.AddCors();
+        builder.Services.AddSignalR();
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IBatalhaRuralGameService, GameService>();
+        builder.Services.AddSingleton<IRoomRegistry, RoomRegistry>();
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
@@ -43,6 +47,21 @@ internal class Program
                 ValidateIssuer = false,
                 ValidateAudience = false
             };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+
+                    if (!string.IsNullOrEmpty(accessToken) && context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                    {
+                        context.Token = accessToken;
+                    }
+
+                    return Task.CompletedTask;
+                }
+            };
         });
 
         var app = builder.Build();
@@ -54,12 +73,17 @@ internal class Program
             app.UseSwaggerUI();
         }
 
-        app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+        app.UseCors(x => x
+            .WithOrigins("http://localhost:4200", "https://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
 
         app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllers();
+        app.MapHub<GameHub>("/hubs/game");
 
         app.Run();
     }

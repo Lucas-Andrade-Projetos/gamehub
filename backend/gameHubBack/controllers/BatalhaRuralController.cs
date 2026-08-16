@@ -1,43 +1,38 @@
+using System.Security.Claims;
 using gameHubBack.DTOs.BatalhaRural;
-using gameHubBack.Enums.BatalhaRural;
 using gameHubBack.Extensions;
 using gameHubBack.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace gameHubBack.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/batalha-rural")]
 public class BatalhaRuralController(IBatalhaRuralGameService gameService) : ControllerBase
 {
-    [HttpPost]
-    public async Task<ActionResult<GameStateDto>> CreateGame(CreateGameDto createGameDto)
-    {
-        var game = await gameService.CreateGameAsync(createGameDto.Player1Nickname, createGameDto.Player2Nickname);
-
-        return game.ToDto();
-    }
-
     [HttpGet("{gameId}")]
     public async Task<ActionResult<GameStateDto>> GetGame(string gameId)
     {
         var game = await gameService.GetGameAsync(gameId);
 
         if (game == null) return NotFound();
+        if (game.Players.All(p => p.UserId != CurrentUserId)) return Forbid();
 
-        return game.ToDto();
+        return game.ToDto(CurrentUserId);
     }
 
-    [HttpPost("{gameId}/players/{playerNum}/tokens/{tokenIndex:int}/place")]
-    public async Task<ActionResult<PlaceTokenResultDto>> PlaceToken(string gameId, PlayerNum playerNum, int tokenIndex, PlaceTokenDto placeTokenDto)
+    [HttpPost("{gameId}/tokens/{tokenIndex:int}/place")]
+    public async Task<ActionResult<PlaceTokenResultDto>> PlaceToken(string gameId, int tokenIndex, PlaceTokenDto placeTokenDto)
     {
         var game = await gameService.GetGameAsync(gameId);
 
         if (game == null) return NotFound("Game not found");
 
-        var player = game.Players.SingleOrDefault(p => p.PlayerNum == playerNum);
+        var player = game.Players.SingleOrDefault(p => p.UserId == CurrentUserId);
 
-        if (player == null) return NotFound("Player not found");
+        if (player == null) return Forbid();
 
         var result = await gameService.PlaceTokenAsync(player, tokenIndex, placeTokenDto.PositionX, placeTokenDto.PositionY, placeTokenDto.Direction);
 
@@ -47,7 +42,10 @@ public class BatalhaRuralController(IBatalhaRuralGameService gameService) : Cont
         {
             Success = result.Success,
             Reason = result.Reason,
-            Player = player.ToDto()
+            Player = player.ToDto(CurrentUserId)
         };
     }
+
+    private string CurrentUserId =>
+        User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new InvalidOperationException("User not authenticated");
 }
