@@ -1,7 +1,9 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using gameHubBack.Data;
 using gameHubBack.Interfaces;
 using gameHubBack.services;
+using gameHubBack.Services.BatalhaRural;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -13,7 +15,10 @@ internal class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
-        builder.Services.AddControllers();
+        builder.Services.AddControllers()
+            .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
 
         builder.Services.AddDbContext<AppDbContext>(opt =>
         {
@@ -24,6 +29,7 @@ internal class Program
 
         builder.Services.AddCors();
         builder.Services.AddScoped<ITokenService, TokenService>();
+        builder.Services.AddScoped<IBatalhaRuralGameService, GameService>();
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
@@ -42,6 +48,12 @@ internal class Program
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+
         app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
 
         app.UseAuthentication();
