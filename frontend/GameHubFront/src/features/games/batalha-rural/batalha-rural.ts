@@ -30,6 +30,21 @@ const DIRECTION_NAMES: Record<Direction, ApiDirection> = {
   [Direction.Down]: 'Down',
 };
 
+const DIRECTION_ARROWS: Record<Direction, string> = {
+  [Direction.Left]: '←',
+  [Direction.Right]: '→',
+  [Direction.Centered]: '',
+  [Direction.Up]: '↑',
+  [Direction.Down]: '↓',
+};
+
+const ROTATION_ORDER = [Direction.Right, Direction.Down, Direction.Left, Direction.Up];
+
+function nextDirection(current: Direction): Direction {
+  const index = ROTATION_ORDER.indexOf(current);
+  return ROTATION_ORDER[(index + 1) % ROTATION_ORDER.length];
+}
+
 @Component({
   selector: 'app-batalha-rural',
   imports: [],
@@ -51,6 +66,7 @@ export class BatalhaRural {
 
   draggingIndex = signal<number | null>(null);
   hoverCell = signal<Cell | null>(null);
+  dragDirection = signal<Direction | null>(null);
 
   submitting = signal(false);
   finalized = signal(false);
@@ -61,24 +77,30 @@ export class BatalhaRural {
   preview = computed(() => {
     const index = this.draggingIndex();
     const hover = this.hoverCell();
+    const direction = this.dragDirection();
 
-    if (index === null || hover === null) return null;
+    if (index === null || hover === null || direction === null) return null;
 
-    const candidate = this.buildCandidate(this.tokenViewModels()[index].token, hover);
+    const candidate = this.buildCandidate(this.tokenViewModels()[index].token, hover, direction);
 
     return PlacementHelper.previewFootprint(candidate, this.board());
+  });
+
+  dragDirectionArrow = computed(() => {
+    const direction = this.dragDirection();
+    return direction === null ? '' : DIRECTION_ARROWS[direction];
   });
 
   private createInitialTokens(): TokenViewModel[] {
     return new Tokens().tokenCollection.map((token, index) => ({ token, index, placed: false }));
   }
 
-  private buildCandidate(token: Token, hover: Cell): Token {
+  private buildCandidate(token: Token, hover: Cell, direction: Direction): Token {
     return {
       ...token,
       positionX: hover.x + 1,
       positionY: hover.y + 1,
-      direction: defaultDirectionFor(token),
+      direction,
     } as Token;
   }
 
@@ -89,11 +111,23 @@ export class BatalhaRural {
   onPieceMouseDown(event: MouseEvent, index: number) {
     event.preventDefault();
 
-    if (this.tokenViewModels()[index].placed) {
+    const viewModel = this.tokenViewModels()[index];
+    const startDirection = viewModel.placed ? viewModel.token.direction : defaultDirectionFor(viewModel.token);
+
+    if (viewModel.placed) {
       this.clearToken(index);
     }
 
     this.draggingIndex.set(index);
+    this.dragDirection.set(startDirection);
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onDocumentKeyDown(event: KeyboardEvent) {
+    if (this.draggingIndex() === null || event.key.toLowerCase() !== 'r') return;
+
+    event.preventDefault();
+    this.dragDirection.update(direction => nextDirection(direction ?? Direction.Right));
   }
 
   @HostListener('document:mousemove', ['$event'])
@@ -116,19 +150,21 @@ export class BatalhaRural {
   onDocumentMouseUp() {
     const index = this.draggingIndex();
     const hover = this.hoverCell();
+    const direction = this.dragDirection();
 
-    if (index !== null && hover !== null) {
-      this.commitPlacement(index, hover);
+    if (index !== null && hover !== null && direction !== null) {
+      this.commitPlacement(index, hover, direction);
     }
 
     this.draggingIndex.set(null);
     this.hoverCell.set(null);
+    this.dragDirection.set(null);
   }
 
-  private commitPlacement(index: number, hover: Cell) {
+  private commitPlacement(index: number, hover: Cell, direction: Direction) {
     const viewModels = this.tokenViewModels();
     const viewModel = viewModels[index];
-    const candidate = this.buildCandidate(viewModel.token, hover);
+    const candidate = this.buildCandidate(viewModel.token, hover, direction);
 
     const boardCopy = new Board(BOARD_SIZE);
     boardCopy.tiles = this.board().tiles.map(row => [...row]);
@@ -141,6 +177,31 @@ export class BatalhaRural {
 
     this.board.set(boardCopy);
     this.tokenViewModels.set(viewModels.map((vm, i) => (i === index ? { ...vm, placed: true } : vm)));
+  }
+
+  rotatePlacedToken(index: number) {
+    const viewModels = this.tokenViewModels();
+    const viewModel = viewModels[index];
+
+    if (!viewModel.placed) return;
+
+    const candidate = { ...viewModel.token, direction: nextDirection(viewModel.token.direction) } as Token;
+
+    const boardCopy = new Board(BOARD_SIZE);
+    boardCopy.tiles = this.board().tiles.map(row => [...row]);
+
+    PlacementHelper.getFootprintCells(viewModel.token, BOARD_SIZE)
+      .forEach(cell => (boardCopy.tiles[cell.y][cell.x] = 'O'));
+
+    if (!PlacementHelper.tryPlaceToken(candidate, boardCopy)) return;
+
+    viewModel.token.direction = candidate.direction;
+    this.board.set(boardCopy);
+    this.tokenViewModels.set(viewModels.map((vm, i) => (i === index ? { ...vm } : vm)));
+  }
+
+  directionArrow(direction: Direction): string {
+    return DIRECTION_ARROWS[direction];
   }
 
   private clearToken(index: number) {
