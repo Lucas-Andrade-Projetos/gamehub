@@ -13,4 +13,6 @@ public interface IBatalhaRuralGameService
     Task<PlacementResult?> PlaceTokenAsync(BatalhaRuralPlayer player, int tokenIndex, int positionX, int positionY, Direction direction);
 
     Task<bool> SetPlayerReadyAsync(string gameId, string userId);
+
+    Task<AttackResult?> AttackAsync(string gameId, string attackerUserId, int x, int y);
 }

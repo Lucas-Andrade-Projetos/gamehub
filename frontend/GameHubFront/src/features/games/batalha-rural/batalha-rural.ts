@@ -48,6 +48,18 @@ export class BatalhaRural implements OnDestroy {
     this.phase.set('lobby');
   }
 
+  onLeftRoom() {
+    this.gameHubService.resetBattleFlow();
+    this.roomCode.set(null);
+    this.gameId.set(null);
+    this.phase.set('room-select');
+  }
+
+  onReturnedToRoom() {
+    this.gameId.set(null);
+    this.phase.set('lobby');
+  }
+
   ngOnDestroy() {
     this.gameHubService.disconnect();
   }

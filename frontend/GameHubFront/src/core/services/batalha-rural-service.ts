@@ -15,6 +15,12 @@ export interface TokenStateDto {
   direction: ApiDirection;
 }
 
+export interface ShotDto {
+  x: number;
+  y: number;
+  hit: boolean;
+}
+
 export interface PlayerStateDto {
   id: string;
   nickname: string;
@@ -22,12 +28,14 @@ export interface PlayerStateDto {
   playerStatus: string;
   board: string[][];
   tokens: TokenStateDto[];
+  shotsReceived: ShotDto[];
 }
 
 export interface GameStateDto {
   id: string;
   status: string;
   viewerPlayerNum: ApiPlayerNum;
+  currentTurnPlayerNum: ApiPlayerNum | null;
   players: PlayerStateDto[];
 }
 

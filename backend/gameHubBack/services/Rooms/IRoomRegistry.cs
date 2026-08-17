@@ -14,5 +14,7 @@ public interface IRoomRegistry
 
     void SetGameId(string code, string gameId);
 
+    GameRoom? ResetRoom(string code);
+
     GameRoom? RemoveConnection(string connectionId);
 }

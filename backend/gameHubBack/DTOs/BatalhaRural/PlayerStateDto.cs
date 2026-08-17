@@ -10,4 +10,5 @@ public class PlayerStateDto
     public required PlayerStatus PlayerStatus { get; set; }
     public required string[][] Board { get; set; }
     public required List<TokenDto> Tokens { get; set; }
+    public required List<ShotDto> ShotsReceived { get; set; }
 }

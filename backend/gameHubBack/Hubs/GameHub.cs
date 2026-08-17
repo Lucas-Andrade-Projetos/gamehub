@@ -34,6 +34,7 @@ public class GameHub(IRoomRegistry roomRegistry, IBatalhaRuralGameService gameSe
 
         await Groups.AddToGroupAsync(Context.ConnectionId, room.Code);
         await Clients.Group(room.Code).SendAsync("RoomUpdated", ToStateDto(room));
+        await Clients.Group(room.Code).SendAsync("ChatMessageReceived", SystemMessage($"{nickname} entrou na sala"));
         await BroadcastOpenRooms();
     }
 
@@ -86,6 +87,42 @@ public class GameHub(IRoomRegistry roomRegistry, IBatalhaRuralGameService gameSe
         if (bothReady) await Clients.Group(code).SendAsync("BattleStarting");
     }
 
+    public async Task Attack(string gameId, string code, int x, int y)
+    {
+        var (userId, _) = GetIdentity();
+
+        var result = await gameService.AttackAsync(gameId, userId, x, y);
+
+        if (result == null) return;
+
+        await Clients.Group(code).SendAsync("AttackResolved", result);
+
+        if (result.GameEnded) await Clients.Group(code).SendAsync("GameEnded", result.WinnerPlayerNum);
+    }
+
+    public async Task ReturnToRoom(string code)
+    {
+        var room = roomRegistry.ResetRoom(code);
+
+        if (room != null) await Clients.Group(code).SendAsync("RoomUpdated", ToStateDto(room));
+    }
+
+    public async Task LeaveRoom(string code)
+    {
+        var (_, nickname) = GetIdentity();
+
+        var room = roomRegistry.RemoveConnection(Context.ConnectionId);
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, code);
+
+        if (room != null)
+        {
+            await Clients.Group(room.Code).SendAsync("RoomUpdated", ToStateDto(room));
+            await Clients.Group(room.Code).SendAsync("ChatMessageReceived", SystemMessage($"{nickname} saiu da sala"));
+        }
+
+        await BroadcastOpenRooms();
+    }
+
     public override async Task OnConnectedAsync()
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, RoomBrowserGroup);
@@ -94,12 +131,26 @@ public class GameHub(IRoomRegistry roomRegistry, IBatalhaRuralGameService gameSe
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        var nickname = Context.User?.FindFirst(ClaimTypes.Name)?.Value;
         var room = roomRegistry.RemoveConnection(Context.ConnectionId);
 
-        if (room != null) await Clients.Group(room.Code).SendAsync("RoomUpdated", ToStateDto(room));
+        if (room != null)
+        {
+            await Clients.Group(room.Code).SendAsync("RoomUpdated", ToStateDto(room));
+
+            if (nickname != null)
+            {
+                await Clients.Group(room.Code).SendAsync("ChatMessageReceived", SystemMessage($"{nickname} saiu da sala"));
+            }
+        }
 
         await BroadcastOpenRooms();
         await base.OnDisconnectedAsync(exception);
+    }
+
+    private static ChatMessageDto SystemMessage(string text)
+    {
+        return new ChatMessageDto { Nickname = "Sistema", Text = text, SentAt = DateTime.UtcNow, IsSystem = true };
     }
 
     private Task BroadcastOpenRooms()

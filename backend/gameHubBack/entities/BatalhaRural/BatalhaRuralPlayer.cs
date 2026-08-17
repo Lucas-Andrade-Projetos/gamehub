@@ -13,4 +13,5 @@ public class BatalhaRuralPlayer
     public PlayerStatus PlayerStatus { get; set; } = PlayerStatus.Preparing;
     public required string[][] BoardTiles { get; set; }
     public required List<GameToken> Tokens { get; set; }
+    public List<Shot> ShotsReceived { get; set; } = [];
 }

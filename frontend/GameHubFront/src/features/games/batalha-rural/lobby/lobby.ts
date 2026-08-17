@@ -1,4 +1,4 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { GameHubService } from '../../../../core/services/game-hub-service';
 
@@ -10,6 +10,8 @@ import { GameHubService } from '../../../../core/services/game-hub-service';
 })
 export class Lobby {
   roomCode = input.required<string>();
+
+  leftRoom = output<void>();
 
   private gameHubService = inject(GameHubService);
 
@@ -31,5 +33,10 @@ export class Lobby {
 
     this.gameHubService.sendMessage(this.roomCode(), text);
     this.messageInput = '';
+  }
+
+  async leaveRoom() {
+    await this.gameHubService.leaveRoom(this.roomCode());
+    this.leftRoom.emit();
   }
 }

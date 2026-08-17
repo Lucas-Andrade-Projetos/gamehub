@@ -30,9 +30,11 @@ internal class Program
         // builder.Services.AddSingleton<Users>();
 
         builder.Services.AddCors();
-        builder.Services.AddSignalR();
+        builder.Services.AddSignalR()
+            .AddJsonProtocol(options => options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IBatalhaRuralGameService, GameService>();
+        builder.Services.AddSingleton<GameLocks>();
         builder.Services.AddSingleton<IRoomRegistry, RoomRegistry>();
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>

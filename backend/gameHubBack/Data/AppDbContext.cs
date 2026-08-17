@@ -30,6 +30,11 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
             v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null).GetHashCode(),
             v => JsonSerializer.Deserialize<List<GameToken>>(JsonSerializer.Serialize(v, (JsonSerializerOptions?)null), (JsonSerializerOptions?)null)!);
 
+        var shotsComparer = new ValueComparer<List<Shot>>(
+            (a, b) => JsonSerializer.Serialize(a, (JsonSerializerOptions?)null) == JsonSerializer.Serialize(b, (JsonSerializerOptions?)null),
+            v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null).GetHashCode(),
+            v => JsonSerializer.Deserialize<List<Shot>>(JsonSerializer.Serialize(v, (JsonSerializerOptions?)null), (JsonSerializerOptions?)null)!);
+
         modelBuilder.Entity<BatalhaRuralPlayer>()
             .Property(p => p.BoardTiles)
             .HasConversion(
@@ -45,5 +50,13 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
                 v => JsonSerializer.Deserialize<List<GameToken>>(v, (JsonSerializerOptions?)null)!)
             .HasColumnType("jsonb")
             .Metadata.SetValueComparer(tokensComparer);
+
+        modelBuilder.Entity<BatalhaRuralPlayer>()
+            .Property(p => p.ShotsReceived)
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+                v => JsonSerializer.Deserialize<List<Shot>>(v, (JsonSerializerOptions?)null)!)
+            .HasColumnType("jsonb")
+            .Metadata.SetValueComparer(shotsComparer);
     }
 }

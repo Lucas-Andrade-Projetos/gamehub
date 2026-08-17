@@ -72,6 +72,17 @@ public class RoomRegistry : IRoomRegistry
         if (_rooms.TryGetValue(code, out var room)) room.GameId = gameId;
     }
 
+    public GameRoom? ResetRoom(string code)
+    {
+        if (!_rooms.TryGetValue(code, out var room)) return null;
+
+        room.GameId = null;
+        if (room.Player1 != null) room.Player1.Ready = false;
+        if (room.Player2 != null) room.Player2.Ready = false;
+
+        return room;
+    }
+
     public GameRoom? RemoveConnection(string connectionId)
     {
         if (!_connectionToRoom.TryRemove(connectionId, out var code)) return null;

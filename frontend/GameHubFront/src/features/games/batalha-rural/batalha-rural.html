@@ -7,13 +7,13 @@
                 <app-batalha-rural-room-select (roomJoined)="onRoomJoined($event)" />
             }
             @case ('lobby') {
-                <app-batalha-rural-lobby [roomCode]="roomCode()!" />
+                <app-batalha-rural-lobby [roomCode]="roomCode()!" (leftRoom)="onLeftRoom()" />
             }
             @case ('placement') {
                 <app-batalha-rural-placement [gameId]="gameId()!" [roomCode]="roomCode()!" />
             }
             @case ('battle') {
-                <app-batalha-rural-battle [gameId]="gameId()!" />
+                <app-batalha-rural-battle [gameId]="gameId()!" [roomCode]="roomCode()!" (returnedToRoom)="onReturnedToRoom()" />
             }
         }
     }

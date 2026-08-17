@@ -1,6 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HubConnection, HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
 import { AccountService } from './account-service';
+import { ApiPlayerNum } from './batalha-rural-service';
 
 export interface RoomPlayerInfo {
   nickname: string;
@@ -22,6 +23,20 @@ export interface ChatMessage {
   nickname: string;
   text: string;
   sentAt: string;
+  isSystem: boolean;
+}
+
+export interface AttackResolvedEvent {
+  success: boolean;
+  reason: string | null;
+  hit: boolean;
+  x: number;
+  y: number;
+  attackerPlayerNum: ApiPlayerNum;
+  defenderPlayerNum: ApiPlayerNum;
+  gameEnded: boolean;
+  nextTurnPlayerNum: ApiPlayerNum | null;
+  winnerPlayerNum: ApiPlayerNum | null;
 }
 
 @Injectable({
@@ -38,6 +53,8 @@ export class GameHubService {
   openRooms = signal<RoomSummary[]>([]);
   gameReadyGameId = signal<string | null>(null);
   battleStarting = signal(false);
+  attackResolved = signal<AttackResolvedEvent | null>(null);
+  gameEndedWinner = signal<ApiPlayerNum | null>(null);
 
   connect(): Promise<void> {
     if (this.hubConnection && this.hubConnection.state !== HubConnectionState.Disconnected) {
@@ -58,6 +75,8 @@ export class GameHubService {
     this.hubConnection.on('RoomListUpdated', (rooms: RoomSummary[]) => this.openRooms.set(rooms));
     this.hubConnection.on('GameReady', (gameId: string) => this.gameReadyGameId.set(gameId));
     this.hubConnection.on('BattleStarting', () => this.battleStarting.set(true));
+    this.hubConnection.on('AttackResolved', (event: AttackResolvedEvent) => this.attackResolved.set(event));
+    this.hubConnection.on('GameEnded', (winnerPlayerNum: ApiPlayerNum) => this.gameEndedWinner.set(winnerPlayerNum));
 
     return this.hubConnection.start();
   }
@@ -70,6 +89,8 @@ export class GameHubService {
     this.openRooms.set([]);
     this.gameReadyGameId.set(null);
     this.battleStarting.set(false);
+    this.attackResolved.set(null);
+    this.gameEndedWinner.set(null);
   }
 
   createRoom(): Promise<string> {
@@ -95,6 +116,25 @@ export class GameHubService {
 
   notifyPlacementReady(gameId: string, code: string): Promise<void> {
     return this.requireConnection().invoke('NotifyPlacementReady', gameId, code);
+  }
+
+  attack(gameId: string, code: string, x: number, y: number): Promise<void> {
+    return this.requireConnection().invoke('Attack', gameId, code, x, y);
+  }
+
+  returnToRoom(code: string): Promise<void> {
+    return this.requireConnection().invoke('ReturnToRoom', code);
+  }
+
+  leaveRoom(code: string): Promise<void> {
+    return this.requireConnection().invoke('LeaveRoom', code);
+  }
+
+  resetBattleFlow() {
+    this.gameReadyGameId.set(null);
+    this.battleStarting.set(false);
+    this.attackResolved.set(null);
+    this.gameEndedWinner.set(null);
   }
 
   private requireConnection(): HubConnection {

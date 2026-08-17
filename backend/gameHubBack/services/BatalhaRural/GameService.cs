@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace gameHubBack.Services.BatalhaRural;
 
-public class GameService(AppDbContext context) : IBatalhaRuralGameService
+public class GameService(AppDbContext context, GameLocks locks) : IBatalhaRuralGameService
 {
     private const int BoardSize = 10;
 
@@ -53,7 +53,7 @@ public class GameService(AppDbContext context) : IBatalhaRuralGameService
         return result;
     }
 
-    public async Task<bool> SetPlayerReadyAsync(string gameId, string userId)
+    public Task<bool> SetPlayerReadyAsync(string gameId, string userId) => locks.RunAsync(gameId, async () =>
     {
         var game = await GetGameAsync(gameId);
         var player = game?.Players.SingleOrDefault(p => p.UserId == userId);
@@ -64,12 +64,83 @@ public class GameService(AppDbContext context) : IBatalhaRuralGameService
 
         var bothReady = game!.Players.All(p => p.PlayerStatus == PlayerStatus.Ready);
 
-        if (bothReady) game.Status = GameStatus.InProgress;
+        if (bothReady)
+        {
+            game.Status = GameStatus.InProgress;
+            game.CurrentTurnPlayerNum = Random.Shared.Next(2) == 0 ? PlayerNum.Player1 : PlayerNum.Player2;
+        }
 
         await context.SaveChangesAsync();
 
         return bothReady;
-    }
+    });
+
+    public Task<AttackResult?> AttackAsync(string gameId, string attackerUserId, int x, int y) => locks.RunAsync(gameId, async () =>
+    {
+        var game = await GetGameAsync(gameId);
+        var attacker = game?.Players.SingleOrDefault(p => p.UserId == attackerUserId);
+
+        if (game == null || attacker == null) return null;
+
+        if (game.CurrentTurnPlayerNum != attacker.PlayerNum) return AttackResult.Fail(AttackFailureReason.NotYourTurn);
+
+        var defender = game.Players.Single(p => p.PlayerNum != attacker.PlayerNum);
+
+        if (x < 0 || x >= defender.BoardTiles.Length || y < 0 || y >= defender.BoardTiles.Length)
+            return AttackResult.Fail(AttackFailureReason.OutOfBounds);
+
+        if (defender.ShotsReceived.Any(s => s.X == x && s.Y == y))
+            return AttackResult.Fail(AttackFailureReason.AlreadyAttacked);
+
+        var hit = defender.BoardTiles[y][x] != "O";
+        defender.ShotsReceived.Add(new Shot { X = x, Y = y, Hit = hit });
+
+        var totalPieceCells = defender.BoardTiles.SelectMany(row => row).Count(c => c != "O");
+        var hitCells = defender.ShotsReceived.Count(s => s.Hit);
+        var defenderDefeated = hitCells >= totalPieceCells;
+
+        AttackResult result;
+
+        if (defenderDefeated)
+        {
+            attacker.PlayerStatus = PlayerStatus.Winner;
+            defender.PlayerStatus = PlayerStatus.Loser;
+            game.Status = GameStatus.Ended;
+            game.CurrentTurnPlayerNum = null;
+
+            result = new AttackResult
+            {
+                Success = true,
+                Hit = hit,
+                X = x,
+                Y = y,
+                AttackerPlayerNum = attacker.PlayerNum,
+                DefenderPlayerNum = defender.PlayerNum,
+                GameEnded = true,
+                WinnerPlayerNum = attacker.PlayerNum
+            };
+        }
+        else
+        {
+            if (!hit) game.CurrentTurnPlayerNum = defender.PlayerNum;
+
+            result = new AttackResult
+            {
+                Success = true,
+                Hit = hit,
+                X = x,
+                Y = y,
+                AttackerPlayerNum = attacker.PlayerNum,
+                DefenderPlayerNum = defender.PlayerNum,
+                GameEnded = false,
+                NextTurnPlayerNum = game.CurrentTurnPlayerNum
+            };
+        }
+
+        await context.SaveChangesAsync();
+
+        return result;
+    });
 
     private static BatalhaRuralPlayer CreatePlayer(string gameId, string userId, string nickname, PlayerNum playerNum)
     {

@@ -15,6 +15,7 @@ public static class BatalhaRuralExtensions
             Id = game.Id,
             Status = game.Status,
             ViewerPlayerNum = viewer.PlayerNum,
+            CurrentTurnPlayerNum = game.CurrentTurnPlayerNum,
             Players = game.Players.Select(p => p.ToDto(viewerUserId)).ToList()
         };
     }
@@ -30,7 +31,8 @@ public static class BatalhaRuralExtensions
             PlayerNum = player.PlayerNum,
             PlayerStatus = player.PlayerStatus,
             Board = isOwner ? player.BoardTiles : CreateEmptyBoard(player.BoardTiles.Length),
-            Tokens = isOwner ? player.Tokens.Select((token, index) => token.ToDto(index)).ToList() : []
+            Tokens = isOwner ? player.Tokens.Select((token, index) => token.ToDto(index)).ToList() : [],
+            ShotsReceived = player.ShotsReceived.Select(s => new ShotDto { X = s.X, Y = s.Y, Hit = s.Hit }).ToList()
         };
     }
 
