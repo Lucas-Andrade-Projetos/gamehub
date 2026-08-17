@@ -16,5 +16,7 @@ public interface IRoomRegistry
 
     GameRoom? ResetRoom(string code);
 
-    GameRoom? RemoveConnection(string connectionId);
+    GameRoom? TryRejoin(string code, string userId, string connectionId);
+
+    GameRoom? HandleDisconnect(string connectionId);
 }

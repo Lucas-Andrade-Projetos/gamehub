@@ -74,6 +74,18 @@ export class Placement {
   waitingForOpponent = signal(false);
   errorMessage = signal<string | null>(null);
 
+  roomState = this.gameHubService.roomState;
+  statusMessages = computed(() => this.gameHubService.chatMessages().filter(m => m.isSystem));
+  opponentConnected = computed(() => {
+    const room = this.roomState();
+    if (!room) return true;
+
+    const userId = this.accountService.currentUser()?.id;
+    const opponent = room.player1?.userId === userId ? room.player2 : room.player1;
+
+    return opponent?.connected ?? true;
+  });
+
   allPlaced = computed(() => this.tokenViewModels().every(vm => vm.placed));
 
   preview = computed(() => {

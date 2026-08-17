@@ -1,6 +1,18 @@
 <div class="flex flex-col items-center gap-6 pt-40 pb-10 min-h-screen">
     <h2 class="font-duality text-3xl tracking-wide select-none">{{ accountService.currentUser()?.nickname }}</h2>
 
+    @if (!opponentConnected()) {
+        <p class="font-yusei text-sm text-red-600 text-center">O oponente caiu. Aguardando reconexão...</p>
+    }
+
+    @if (statusMessages().length > 0) {
+        <div class="fixed top-24 right-4 w-64 max-h-32 overflow-y-auto flex flex-col gap-1 bg-white/70 border border-amber-700 rounded p-2 z-40">
+            @for (message of statusMessages(); track $index) {
+                <p class="font-yusei text-xs text-stone-600 italic">{{ message.text }}</p>
+            }
+        </div>
+    }
+
     @if (waitingForOpponent()) {
         <p class="font-yusei text-center">Posicionamento confirmado! Aguardando o oponente terminar...</p>
     } @else {

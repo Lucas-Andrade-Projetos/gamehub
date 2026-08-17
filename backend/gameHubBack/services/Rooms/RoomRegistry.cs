@@ -83,19 +83,44 @@ public class RoomRegistry : IRoomRegistry
         return room;
     }
 
-    public GameRoom? RemoveConnection(string connectionId)
+    public GameRoom? TryRejoin(string code, string userId, string connectionId)
+    {
+        if (!_rooms.TryGetValue(code, out var room)) return null;
+
+        var player = room.Player1?.UserId == userId ? room.Player1
+            : room.Player2?.UserId == userId ? room.Player2
+            : null;
+
+        if (player == null) return null;
+
+        player.ConnectionId = connectionId;
+        player.Connected = true;
+        _connectionToRoom[connectionId] = code;
+
+        return room;
+    }
+
+    public GameRoom? HandleDisconnect(string connectionId)
     {
         if (!_connectionToRoom.TryRemove(connectionId, out var code)) return null;
         if (!_rooms.TryGetValue(code, out var room)) return null;
 
-        if (room.Player1?.ConnectionId == connectionId) room.Player1 = null;
-        else if (room.Player2?.ConnectionId == connectionId) room.Player2 = null;
-
-        if (room.Player1 == null && room.Player2 == null)
+        if (room.GameId == null)
         {
-            _rooms.TryRemove(code, out _);
-            return null;
+            if (room.Player1?.ConnectionId == connectionId) room.Player1 = null;
+            else if (room.Player2?.ConnectionId == connectionId) room.Player2 = null;
+
+            if (room.Player1 == null && room.Player2 == null)
+            {
+                _rooms.TryRemove(code, out _);
+                return null;
+            }
+
+            return room;
         }
+
+        if (room.Player1?.ConnectionId == connectionId) room.Player1.Connected = false;
+        else if (room.Player2?.ConnectionId == connectionId) room.Player2.Connected = false;
 
         return room;
     }

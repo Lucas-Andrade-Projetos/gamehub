@@ -4,6 +4,7 @@ using gameHubBack.Data;
 using gameHubBack.Hubs;
 using gameHubBack.Interfaces;
 using gameHubBack.services;
+using gameHubBack.Services;
 using gameHubBack.Services.BatalhaRural;
 using gameHubBack.Services.Rooms;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -35,6 +36,7 @@ internal class Program
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IBatalhaRuralGameService, GameService>();
         builder.Services.AddSingleton<GameLocks>();
+        builder.Services.AddSingleton<DelayedActionScheduler>();
         builder.Services.AddSingleton<IRoomRegistry, RoomRegistry>();
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>

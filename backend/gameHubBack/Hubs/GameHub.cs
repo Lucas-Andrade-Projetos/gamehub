@@ -1,6 +1,9 @@
 using System.Security.Claims;
+using gameHubBack.DTOs.BatalhaRural;
 using gameHubBack.DTOs.Rooms;
 using gameHubBack.Interfaces;
+using gameHubBack.Services;
+using gameHubBack.Services.BatalhaRural;
 using gameHubBack.Services.Rooms;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -8,9 +11,15 @@ using Microsoft.AspNetCore.SignalR;
 namespace gameHubBack.Hubs;
 
 [Authorize]
-public class GameHub(IRoomRegistry roomRegistry, IBatalhaRuralGameService gameService) : Hub
+public class GameHub(
+    IRoomRegistry roomRegistry,
+    IBatalhaRuralGameService gameService,
+    DelayedActionScheduler scheduler,
+    IHubContext<GameHub> hubContext,
+    IServiceScopeFactory scopeFactory) : Hub
 {
     private const string RoomBrowserGroup = "room-browser";
+    private static readonly TimeSpan ReconnectGrace = TimeSpan.FromSeconds(30);
 
     public async Task<string> CreateRoom()
     {
@@ -36,6 +45,29 @@ public class GameHub(IRoomRegistry roomRegistry, IBatalhaRuralGameService gameSe
         await Clients.Group(room.Code).SendAsync("RoomUpdated", ToStateDto(room));
         await Clients.Group(room.Code).SendAsync("ChatMessageReceived", SystemMessage($"{nickname} entrou na sala"));
         await BroadcastOpenRooms();
+    }
+
+    public async Task<RoomStateDto?> Rejoin(string code)
+    {
+        var (userId, nickname) = GetIdentity();
+
+        var room = roomRegistry.TryRejoin(code.ToUpperInvariant(), userId, Context.ConnectionId);
+
+        if (room == null) return null;
+
+        await Groups.AddToGroupAsync(Context.ConnectionId, room.Code);
+
+        if (room.GameId != null)
+        {
+            scheduler.Cancel(AbandonTimerKey(room.GameId, userId));
+            await gameService.RefreshTurnDeadlineAsync(room.GameId);
+            ScheduleTurnTimer(room.GameId, room.Code);
+        }
+
+        await Clients.Group(room.Code).SendAsync("RoomUpdated", ToStateDto(room));
+        await Clients.Group(room.Code).SendAsync("ChatMessageReceived", SystemMessage($"{nickname} reconectou"));
+
+        return ToStateDto(room);
     }
 
     public async Task SendMessage(string code, string text)
@@ -84,7 +116,11 @@ public class GameHub(IRoomRegistry roomRegistry, IBatalhaRuralGameService gameSe
 
         var bothReady = await gameService.SetPlayerReadyAsync(gameId, userId);
 
-        if (bothReady) await Clients.Group(code).SendAsync("BattleStarting");
+        if (bothReady)
+        {
+            await Clients.Group(code).SendAsync("BattleStarting");
+            ScheduleTurnTimer(gameId, code);
+        }
     }
 
     public async Task Attack(string gameId, string code, int x, int y)
@@ -97,7 +133,19 @@ public class GameHub(IRoomRegistry roomRegistry, IBatalhaRuralGameService gameSe
 
         await Clients.Group(code).SendAsync("AttackResolved", result);
 
-        if (result.GameEnded) await Clients.Group(code).SendAsync("GameEnded", result.WinnerPlayerNum);
+        if (result.GameEnded && result.WinnerPlayerNum != null)
+        {
+            scheduler.Cancel(TurnTimerKey(gameId));
+            await Clients.Group(code).SendAsync("GameEnded", new GameEndedDto
+            {
+                WinnerPlayerNum = result.WinnerPlayerNum.Value,
+                Reason = "Normal"
+            });
+        }
+        else if (result.Success)
+        {
+            ScheduleTurnTimer(gameId, code);
+        }
     }
 
     public async Task ReturnToRoom(string code)
@@ -111,7 +159,7 @@ public class GameHub(IRoomRegistry roomRegistry, IBatalhaRuralGameService gameSe
     {
         var (_, nickname) = GetIdentity();
 
-        var room = roomRegistry.RemoveConnection(Context.ConnectionId);
+        var room = roomRegistry.HandleDisconnect(Context.ConnectionId);
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, code);
 
         if (room != null)
@@ -132,13 +180,30 @@ public class GameHub(IRoomRegistry roomRegistry, IBatalhaRuralGameService gameSe
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var nickname = Context.User?.FindFirst(ClaimTypes.Name)?.Value;
-        var room = roomRegistry.RemoveConnection(Context.ConnectionId);
+        var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var room = roomRegistry.HandleDisconnect(Context.ConnectionId);
 
         if (room != null)
         {
             await Clients.Group(room.Code).SendAsync("RoomUpdated", ToStateDto(room));
 
-            if (nickname != null)
+            if (room.GameId != null)
+            {
+                var gameId = room.GameId;
+                var code = room.Code;
+
+                scheduler.Cancel(TurnTimerKey(gameId));
+
+                if (nickname != null)
+                {
+                    await Clients.Group(code).SendAsync(
+                        "ChatMessageReceived",
+                        SystemMessage($"{nickname} caiu da partida. Aguardando reconexão..."));
+                }
+
+                if (userId != null) ScheduleAbandonTimer(gameId, code, userId);
+            }
+            else if (nickname != null)
             {
                 await Clients.Group(room.Code).SendAsync("ChatMessageReceived", SystemMessage($"{nickname} saiu da sala"));
             }
@@ -147,6 +212,45 @@ public class GameHub(IRoomRegistry roomRegistry, IBatalhaRuralGameService gameSe
         await BroadcastOpenRooms();
         await base.OnDisconnectedAsync(exception);
     }
+
+    private void ScheduleTurnTimer(string gameId, string code)
+    {
+        scheduler.Schedule(TurnTimerKey(gameId), GameService.TurnDuration, async () =>
+        {
+            using var scope = scopeFactory.CreateScope();
+            var scopedGameService = scope.ServiceProvider.GetRequiredService<IBatalhaRuralGameService>();
+
+            var result = await scopedGameService.TimeoutTurnAsync(gameId);
+
+            if (result == null) return;
+
+            await hubContext.Clients.Group(code).SendAsync("TurnTimedOut", result);
+            ScheduleTurnTimer(gameId, code);
+        });
+    }
+
+    private void ScheduleAbandonTimer(string gameId, string code, string disconnectedUserId)
+    {
+        scheduler.Schedule(AbandonTimerKey(gameId, disconnectedUserId), ReconnectGrace, async () =>
+        {
+            using var scope = scopeFactory.CreateScope();
+            var scopedGameService = scope.ServiceProvider.GetRequiredService<IBatalhaRuralGameService>();
+
+            var result = await scopedGameService.ForfeitAsync(gameId, disconnectedUserId);
+
+            if (result?.WinnerPlayerNum == null) return;
+
+            await hubContext.Clients.Group(code).SendAsync("GameEnded", new GameEndedDto
+            {
+                WinnerPlayerNum = result.WinnerPlayerNum.Value,
+                Reason = "Abandonment"
+            });
+        });
+    }
+
+    private static string TurnTimerKey(string gameId) => $"turn:{gameId}";
+
+    private static string AbandonTimerKey(string gameId, string userId) => $"abandon:{gameId}:{userId}";
 
     private static ChatMessageDto SystemMessage(string text)
     {
@@ -173,8 +277,13 @@ public class GameHub(IRoomRegistry roomRegistry, IBatalhaRuralGameService gameSe
         return new RoomStateDto
         {
             Code = room.Code,
-            Player1 = room.Player1 == null ? null : new RoomPlayerDto { Nickname = room.Player1.Nickname, Ready = room.Player1.Ready },
-            Player2 = room.Player2 == null ? null : new RoomPlayerDto { Nickname = room.Player2.Nickname, Ready = room.Player2.Ready }
+            GameId = room.GameId,
+            Player1 = room.Player1 == null
+                ? null
+                : new RoomPlayerDto { UserId = room.Player1.UserId, Nickname = room.Player1.Nickname, Ready = room.Player1.Ready, Connected = room.Player1.Connected },
+            Player2 = room.Player2 == null
+                ? null
+                : new RoomPlayerDto { UserId = room.Player2.UserId, Nickname = room.Player2.Nickname, Ready = room.Player2.Ready, Connected = room.Player2.Connected }
         };
     }
 

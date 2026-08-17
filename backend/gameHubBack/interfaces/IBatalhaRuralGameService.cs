@@ -15,4 +15,10 @@ public interface IBatalhaRuralGameService
     Task<bool> SetPlayerReadyAsync(string gameId, string userId);
 
     Task<AttackResult?> AttackAsync(string gameId, string attackerUserId, int x, int y);
+
+    Task<AttackResult?> TimeoutTurnAsync(string gameId);
+
+    Task<DateTime?> RefreshTurnDeadlineAsync(string gameId);
+
+    Task<AttackResult?> ForfeitAsync(string gameId, string disconnectedUserId);
 }

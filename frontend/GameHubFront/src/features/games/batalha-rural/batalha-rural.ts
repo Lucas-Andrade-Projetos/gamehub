@@ -1,5 +1,6 @@
 import { Component, effect, inject, OnDestroy, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { BatalhaRuralService } from '../../../core/services/batalha-rural-service';
 import { GameHubService } from '../../../core/services/game-hub-service';
 import { Battle } from './battle/battle';
 import { Lobby } from './lobby/lobby';
@@ -17,6 +18,7 @@ type Phase = 'room-select' | 'lobby' | 'placement' | 'battle';
 export class BatalhaRural implements OnDestroy {
   router = inject(Router);
   gameHubService = inject(GameHubService);
+  private batalhaRuralService = inject(BatalhaRuralService);
 
   phase = signal<Phase>('room-select');
   roomCode = signal<string | null>(null);
@@ -41,9 +43,38 @@ export class BatalhaRural implements OnDestroy {
         this.phase.set('battle');
       }
     });
+
+    effect(() => {
+      // fires both for a normal win/loss during battle and for a forfeit while still in the
+      // placement phase (opponent disconnected and never came back) - either way, the Battle
+      // component is what knows how to render the end-of-game screen.
+      if (this.gameHubService.gameEnded()) {
+        this.phase.set('battle');
+      }
+    });
+
+    effect(() => {
+      const room = this.gameHubService.rejoined();
+      if (!room) return;
+
+      this.roomCode.set(room.code);
+
+      if (!room.gameId) {
+        this.phase.set('lobby');
+        return;
+      }
+
+      this.gameId.set(room.gameId);
+
+      this.batalhaRuralService.getGame(room.gameId).subscribe({
+        next: game => this.phase.set(game.status === 'Preparing' ? 'placement' : 'battle'),
+        error: () => this.phase.set('lobby'),
+      });
+    });
   }
 
   onRoomJoined(code: string) {
+    this.gameHubService.rememberRoom(code);
     this.roomCode.set(code);
     this.phase.set('lobby');
   }

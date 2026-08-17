@@ -16,6 +16,7 @@ public static class BatalhaRuralExtensions
             Status = game.Status,
             ViewerPlayerNum = viewer.PlayerNum,
             CurrentTurnPlayerNum = game.CurrentTurnPlayerNum,
+            TurnExpiresAt = game.TurnExpiresAt,
             Players = game.Players.Select(p => p.ToDto(viewerUserId)).ToList()
         };
     }

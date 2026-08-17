@@ -9,6 +9,7 @@ namespace gameHubBack.Services.BatalhaRural;
 public class GameService(AppDbContext context, GameLocks locks) : IBatalhaRuralGameService
 {
     private const int BoardSize = 10;
+    public static readonly TimeSpan TurnDuration = TimeSpan.FromSeconds(30);
 
     public async Task<BatalhaRuralGame> CreateGameAsync(string userId1, string nickname1, string userId2, string nickname2)
     {
@@ -68,6 +69,7 @@ public class GameService(AppDbContext context, GameLocks locks) : IBatalhaRuralG
         {
             game.Status = GameStatus.InProgress;
             game.CurrentTurnPlayerNum = Random.Shared.Next(2) == 0 ? PlayerNum.Player1 : PlayerNum.Player2;
+            game.TurnExpiresAt = DateTime.UtcNow.Add(TurnDuration);
         }
 
         await context.SaveChangesAsync();
@@ -107,6 +109,7 @@ public class GameService(AppDbContext context, GameLocks locks) : IBatalhaRuralG
             defender.PlayerStatus = PlayerStatus.Loser;
             game.Status = GameStatus.Ended;
             game.CurrentTurnPlayerNum = null;
+            game.TurnExpiresAt = null;
 
             result = new AttackResult
             {
@@ -123,6 +126,7 @@ public class GameService(AppDbContext context, GameLocks locks) : IBatalhaRuralG
         else
         {
             if (!hit) game.CurrentTurnPlayerNum = defender.PlayerNum;
+            game.TurnExpiresAt = DateTime.UtcNow.Add(TurnDuration);
 
             result = new AttackResult
             {
@@ -140,6 +144,69 @@ public class GameService(AppDbContext context, GameLocks locks) : IBatalhaRuralG
         await context.SaveChangesAsync();
 
         return result;
+    });
+
+    public Task<AttackResult?> TimeoutTurnAsync(string gameId) => locks.RunAsync(gameId, async () =>
+    {
+        var game = await GetGameAsync(gameId);
+
+        if (game == null || game.Status != GameStatus.InProgress || game.CurrentTurnPlayerNum == null) return null;
+
+        var previous = game.CurrentTurnPlayerNum.Value;
+        var next = previous == PlayerNum.Player1 ? PlayerNum.Player2 : PlayerNum.Player1;
+
+        game.CurrentTurnPlayerNum = next;
+        game.TurnExpiresAt = DateTime.UtcNow.Add(TurnDuration);
+
+        await context.SaveChangesAsync();
+
+        return new AttackResult
+        {
+            Success = true,
+            AttackerPlayerNum = previous,
+            DefenderPlayerNum = next,
+            GameEnded = false,
+            NextTurnPlayerNum = next
+        };
+    });
+
+    public Task<DateTime?> RefreshTurnDeadlineAsync(string gameId) => locks.RunAsync(gameId, async () =>
+    {
+        var game = await GetGameAsync(gameId);
+
+        if (game == null || game.Status != GameStatus.InProgress || game.CurrentTurnPlayerNum == null) return (DateTime?)null;
+
+        game.TurnExpiresAt = DateTime.UtcNow.Add(TurnDuration);
+        await context.SaveChangesAsync();
+
+        return game.TurnExpiresAt;
+    });
+
+    public Task<AttackResult?> ForfeitAsync(string gameId, string disconnectedUserId) => locks.RunAsync(gameId, async () =>
+    {
+        var game = await GetGameAsync(gameId);
+        var loser = game?.Players.SingleOrDefault(p => p.UserId == disconnectedUserId);
+
+        if (game == null || loser == null || game.Status == GameStatus.Ended) return null;
+
+        var winner = game.Players.Single(p => p.UserId != disconnectedUserId);
+
+        winner.PlayerStatus = PlayerStatus.Winner;
+        loser.PlayerStatus = PlayerStatus.Loser;
+        game.Status = GameStatus.Ended;
+        game.CurrentTurnPlayerNum = null;
+        game.TurnExpiresAt = null;
+
+        await context.SaveChangesAsync();
+
+        return new AttackResult
+        {
+            Success = true,
+            AttackerPlayerNum = winner.PlayerNum,
+            DefenderPlayerNum = loser.PlayerNum,
+            GameEnded = true,
+            WinnerPlayerNum = winner.PlayerNum
+        };
     });
 
     private static BatalhaRuralPlayer CreatePlayer(string gameId, string userId, string nickname, PlayerNum playerNum)

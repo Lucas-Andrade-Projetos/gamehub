@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, OnInit, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, OnDestroy, OnInit, output, signal } from '@angular/core';
 import { BatalhaRuralService, GameStateDto, PlayerStateDto, ShotDto } from '../../../../core/services/batalha-rural-service';
 import { GameHubService } from '../../../../core/services/game-hub-service';
 
@@ -10,7 +10,7 @@ const BOARD_SIZE = 10;
   templateUrl: './battle.html',
   styleUrl: './battle.css',
 })
-export class Battle implements OnInit {
+export class Battle implements OnInit, OnDestroy {
   gameId = input.required<string>();
   roomCode = input.required<string>();
 
@@ -25,9 +25,17 @@ export class Battle implements OnInit {
   showingReveal = signal(true);
   revealFadingOut = signal(false);
   errorMessage = signal<string | null>(null);
+  endReason = signal<'Normal' | 'Abandonment' | null>(null);
+  remainingSeconds = signal<number | null>(null);
+
+  roomState = this.gameHubService.roomState;
+  statusMessages = computed(() => this.gameHubService.chatMessages().filter(m => m.isSystem));
 
   ownPlayer = computed<PlayerStateDto | null>(() => this.game()?.players.find(p => p.playerNum === this.game()?.viewerPlayerNum) ?? null);
   opponentPlayer = computed<PlayerStateDto | null>(() => this.game()?.players.find(p => p.playerNum !== this.game()?.viewerPlayerNum) ?? null);
+
+  ownConnected = computed(() => this.roomPlayerFor(this.ownPlayer())?.connected ?? true);
+  opponentConnected = computed(() => this.roomPlayerFor(this.opponentPlayer())?.connected ?? true);
 
   gameEnded = computed(() => this.game()?.status === 'Ended');
   isMyTurn = computed(() => {
@@ -36,6 +44,8 @@ export class Battle implements OnInit {
   });
 
   private attacking = signal(false);
+  private countdownHandle?: ReturnType<typeof setInterval>;
+  private statusMessageBaseline: number | null = null;
 
   constructor() {
     effect(() => {
@@ -43,7 +53,32 @@ export class Battle implements OnInit {
     });
 
     effect(() => {
-      if (this.gameHubService.gameEndedWinner()) this.refreshGame();
+      if (this.gameHubService.turnTimedOut() > 0) this.refreshGame();
+    });
+
+    effect(() => {
+      const ended = this.gameHubService.gameEnded();
+      if (ended) {
+        this.endReason.set(ended.reason);
+        this.refreshGame();
+      }
+    });
+
+    effect(() => {
+      // system messages (caiu/reconectou) can change the turn deadline server-side without a
+      // dedicated broadcast - re-sync whenever a *new* one arrives. The first run only records
+      // the baseline (messages already in the signal from the lobby phase aren't "new").
+      const count = this.statusMessages().length;
+
+      if (this.statusMessageBaseline === null) {
+        this.statusMessageBaseline = count;
+        return;
+      }
+
+      if (count > this.statusMessageBaseline) {
+        this.statusMessageBaseline = count;
+        this.refreshGame();
+      }
     });
   }
 
@@ -52,6 +87,33 @@ export class Battle implements OnInit {
     setTimeout(() => this.showingReveal.set(false), 2700);
 
     this.refreshGame();
+
+    this.countdownHandle = setInterval(() => this.updateCountdown(), 500);
+  }
+
+  ngOnDestroy() {
+    if (this.countdownHandle) clearInterval(this.countdownHandle);
+  }
+
+  private updateCountdown() {
+    const expiresAt = this.game()?.turnExpiresAt;
+
+    if (!expiresAt || this.gameEnded()) {
+      this.remainingSeconds.set(null);
+      return;
+    }
+
+    const remaining = Math.max(0, Math.round((new Date(expiresAt).getTime() - Date.now()) / 1000));
+    this.remainingSeconds.set(remaining);
+  }
+
+  private roomPlayerFor(player: PlayerStateDto | null) {
+    if (!player) return null;
+
+    const room = this.roomState();
+    if (!room) return null;
+
+    return player.playerNum === 'Player1' ? room.player1 : room.player2;
   }
 
   private refreshGame() {

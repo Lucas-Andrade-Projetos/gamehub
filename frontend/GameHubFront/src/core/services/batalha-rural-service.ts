@@ -36,6 +36,7 @@ export interface GameStateDto {
   status: string;
   viewerPlayerNum: ApiPlayerNum;
   currentTurnPlayerNum: ApiPlayerNum | null;
+  turnExpiresAt: string | null;
   players: PlayerStateDto[];
 }
 

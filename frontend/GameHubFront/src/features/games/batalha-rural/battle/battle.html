@@ -5,18 +5,38 @@
         <p class="font-yusei text-center">Carregando...</p>
     } @else {
         @if (!gameEnded()) {
-            <p class="font-duality text-lg tracking-wide select-none">
-                @if (isMyTurn()) {
-                    Sua vez de atacar!
-                } @else {
-                    Vez de {{ opponentPlayer()?.nickname }}...
+            <div class="flex flex-col items-center gap-1">
+                <p class="font-duality text-lg tracking-wide select-none">
+                    @if (isMyTurn()) {
+                        Sua vez de atacar!
+                    } @else {
+                        Vez de {{ opponentPlayer()?.nickname }}...
+                    }
+                </p>
+                @if (remainingSeconds() !== null) {
+                    <p class="font-duality text-sm select-none" [class]="remainingSeconds()! <= 10 ? 'text-red-600' : 'text-stone-600'">
+                        {{ remainingSeconds() }}s
+                    </p>
                 }
-            </p>
+            </div>
+        }
+
+        @if (statusMessages().length > 0) {
+            <div class="fixed top-24 right-4 w-64 max-h-32 overflow-y-auto flex flex-col gap-1 bg-white/70 border border-amber-700 rounded p-2 z-40">
+                @for (message of statusMessages(); track $index) {
+                    <p class="font-yusei text-xs text-stone-600 italic">{{ message.text }}</p>
+                }
+            </div>
         }
 
         <div class="flex flex-col md:flex-row gap-10 items-start justify-center w-full">
             <div class="flex flex-col items-center gap-3">
-                <h3 class="font-duality text-xl uppercase select-none">{{ ownPlayer()?.nickname }} (você)</h3>
+                <h3 class="font-duality text-xl uppercase select-none">
+                    {{ ownPlayer()?.nickname }} (você)
+                    @if (!ownConnected()) {
+                        <span class="text-red-600 text-xs normal-case">(reconectando...)</span>
+                    }
+                </h3>
                 <div class="grid grid-cols-10 grid-rows-10 border-2 border-amber-800 w-[320px] h-[320px] select-none">
                     @for (y of boardRange; track y) {
                         @for (x of boardRange; track x) {
@@ -30,7 +50,12 @@
             </div>
 
             <div class="flex flex-col items-center gap-3">
-                <h3 class="font-duality text-xl uppercase select-none">{{ opponentPlayer()?.nickname }}</h3>
+                <h3 class="font-duality text-xl uppercase select-none">
+                    {{ opponentPlayer()?.nickname }}
+                    @if (!opponentConnected()) {
+                        <span class="text-red-600 text-xs normal-case">(reconectando...)</span>
+                    }
+                </h3>
                 <div class="grid grid-cols-10 grid-rows-10 border-2 border-amber-800 w-[320px] h-[320px] select-none">
                     @for (y of boardRange; track y) {
                         @for (x of boardRange; track x) {
@@ -63,6 +88,15 @@
                         DERROTA
                     }
                 </h1>
+                @if (endReason() === 'Abandonment') {
+                    <p class="font-yusei text-white text-center">
+                        @if (ownPlayer()?.playerStatus === 'Winner') {
+                            O adversário abandonou a partida.
+                        } @else {
+                            Você não reconectou a tempo.
+                        }
+                    </p>
+                }
                 <button
                     class="font-duality tracking-wide border-2 border-amber-500 text-white rounded px-6 py-2 cursor-pointer hover:bg-amber-400 hover:text-black transition-all"
                     (click)="returnToRoom()">
