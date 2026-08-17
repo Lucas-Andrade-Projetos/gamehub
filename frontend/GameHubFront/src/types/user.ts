@@ -17,3 +17,16 @@ export type LoginCreds = {
   email: string;
   password: string;
 };
+
+export type UpdateProfileCreds = {
+  nickname: string;
+  email: string;
+  imageBase64: string | null;
+  imageChanged: boolean;
+};
+
+export type ChangePasswordCreds = {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+};

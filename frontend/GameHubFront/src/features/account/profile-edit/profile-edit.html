@@ -1,0 +1,97 @@
+<div class="flex flex-col w-full h-full px-6 py-4">
+    <div class="flex flex-1 flex-col items-center justify-center gap-8">
+        <div class="flex flex-col items-center gap-3">
+            <div class="relative w-24 h-24">
+                @if (displayedImageUrl(); as url) {
+                    <img [src]="url" class="w-24 h-24 rounded-full object-cover border border-amber-700" />
+                } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                        class="w-24 h-24 rounded-full text-stone-400 bg-white/60 border border-amber-700">
+                        <path fill-rule="evenodd" clip-rule="evenodd"
+                            d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+                    </svg>
+                }
+
+                <button type="button"
+                    class="absolute -bottom-1 -right-1 flex items-center justify-center w-7 h-7 rounded-full bg-amber-400 border border-amber-700 cursor-pointer hover:bg-amber-300"
+                    (click)="triggerFileInput()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+                    </svg>
+                </button>
+
+                @if (hasPhoto()) {
+                    <button type="button"
+                        class="absolute -top-1 -left-1 flex items-center justify-center w-6 h-6 rounded-full bg-white border border-amber-700 cursor-pointer hover:bg-stone-200"
+                        (click)="removePhoto()">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" class="w-3.5 h-3.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                }
+
+                <input #fileInput type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)" />
+            </div>
+
+            <div class="flex items-center gap-2">
+                @if (editingNickname()) {
+                    <input class="border border-amber-700 rounded px-2 py-1 font-yusei text-sm text-center"
+                        [(ngModel)]="nickname" />
+                } @else {
+                    <span class="font-duality text-xl">{{ nickname }}</span>
+                }
+                <button type="button" class="cursor-pointer" (click)="startEditNickname()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5" class="w-4 h-4 text-stone-600">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-3 w-full items-center">
+            <h3 class="font-duality text-base tracking-wide text-stone-600">Dados cadastrais</h3>
+
+            <div class="flex items-center gap-2">
+                @if (editingEmail()) {
+                    <input class="border border-amber-700 rounded px-2 py-1 font-yusei text-sm" [(ngModel)]="email" />
+                } @else {
+                    <span class="font-yusei text-sm">{{ email }}</span>
+                }
+                <button type="button" class="cursor-pointer" (click)="startEditEmail()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5" class="w-4 h-4 text-stone-600">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+                    </svg>
+                </button>
+            </div>
+
+            <button type="button"
+                class="font-duality text-sm border border-amber-700 rounded px-4 py-1 cursor-pointer hover:bg-amber-400 transition-all"
+                (click)="openPassword.emit()">
+                Alterar senha
+            </button>
+        </div>
+    </div>
+
+    @if (errorMessage()) {
+        <p class="text-red-600 text-xs text-center pb-2">{{ errorMessage() }}</p>
+    }
+
+    <button type="button" class="flex items-center justify-center gap-2 mx-auto cursor-pointer disabled:opacity-50"
+        [disabled]="submitting()" (click)="onBackClick()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+            class="size-5 shadow-2xl">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 18.75 7.5-7.5 7.5 7.5" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 7.5-7.5 7.5 7.5" />
+        </svg>
+        @if (dirty()) {
+            <span class="font-duality text-sm">{{ submitting() ? 'Salvando...' : 'Salvar alterações' }}</span>
+        }
+    </button>
+</div>

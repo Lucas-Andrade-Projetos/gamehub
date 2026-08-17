@@ -7,6 +7,7 @@ public class AppUser
     public required string Nickname { get; set; }
     public required string NormalizedEmail { get; set; }
     public required string NormalizedNickname { get; set; }
+    public string? ImageUrl { get; set; }
     public required byte[] PasswordHash { get; set; }
     public required byte[] PasswordSalt { get; set; }
 }
