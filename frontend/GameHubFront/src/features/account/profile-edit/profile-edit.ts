@@ -3,6 +3,9 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AccountService } from '../../../core/services/account-service';
 import { extractErrorMessage } from '../../../core/utils/http-error';
+import { PencilIcon } from '../../../shared/icons/pencil-icon';
+import { ChevronUpIcon } from '../../../shared/icons/chevron-up-icon';
+import { UserBustIcon } from '../../../shared/icons/user-bust-icon';
 
 const AVATAR_SIZE = 256;
 const JPEG_QUALITY = 0.8;
@@ -10,7 +13,7 @@ const MAX_IMAGE_DATA_URL_LENGTH = 700_000;
 
 @Component({
   selector: 'app-profile-edit',
-  imports: [FormsModule],
+  imports: [FormsModule, PencilIcon, ChevronUpIcon, UserBustIcon],
   templateUrl: './profile-edit.html',
   styleUrl: './profile-edit.css',
 })

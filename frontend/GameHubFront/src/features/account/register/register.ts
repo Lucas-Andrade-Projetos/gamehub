@@ -6,10 +6,11 @@ import { LoginCreds, RegisterCreds } from '../../../types/user';
 import { Router } from "@angular/router";
 import { NavState } from '../../../types/NavState';
 import { extractErrorMessage } from '../../../core/utils/http-error';
+import { ChevronUpIcon } from '../../../shared/icons/chevron-up-icon';
 
 @Component({
   selector: 'app-register',
-  imports: [FormsModule],
+  imports: [FormsModule, ChevronUpIcon],
   templateUrl: './register.html',
   styleUrl: './register.css',
 })

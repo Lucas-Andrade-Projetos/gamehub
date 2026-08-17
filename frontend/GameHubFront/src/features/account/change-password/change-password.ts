@@ -3,12 +3,13 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AccountService } from '../../../core/services/account-service';
 import { extractErrorMessage } from '../../../core/utils/http-error';
+import { ChevronUpIcon } from '../../../shared/icons/chevron-up-icon';
 
 const MIN_PASSWORD_LENGTH = 12;
 
 @Component({
   selector: 'app-change-password',
-  imports: [FormsModule],
+  imports: [FormsModule, ChevronUpIcon],
   templateUrl: './change-password.html',
   styleUrl: './change-password.css',
 })

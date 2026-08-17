@@ -8,12 +8,13 @@ import { Register } from "../../features/account/register/register";
 import { ProfileEdit } from "../../features/account/profile-edit/profile-edit";
 import { ChangePassword } from "../../features/account/change-password/change-password";
 import { NavState } from '../../types/NavState';
+import { UserBustIcon } from '../../shared/icons/user-bust-icon';
 
 type ProfileView = 'summary' | 'edit' | 'password';
 
 @Component({
   selector: 'app-nav',
-  imports: [NgClass, RouterLink, LoginBtn, Login, Register, ProfileEdit, ChangePassword],
+  imports: [NgClass, RouterLink, LoginBtn, Login, Register, ProfileEdit, ChangePassword, UserBustIcon],
   templateUrl: './nav.html',
   styleUrl: './nav.css',
 })

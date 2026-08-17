@@ -6,10 +6,11 @@ import { FormsModule } from '@angular/forms';
 import { Router } from "@angular/router";
 import { NavState } from '../../../types/NavState';
 import { extractErrorMessage } from '../../../core/utils/http-error';
+import { ChevronUpIcon } from '../../../shared/icons/chevron-up-icon';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule],
+  imports: [FormsModule, ChevronUpIcon],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
