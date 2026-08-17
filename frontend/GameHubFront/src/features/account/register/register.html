@@ -49,6 +49,10 @@
                 type="password" [(ngModel)]="creds.confirmPassword" placeholder="confirme a senha" />
         </div>
 
+        @if (errorMessage(); as message) {
+            <span class="text-red-600 text-[12px] w-[80%] text-center">{{ message }}</span>
+        }
+
         <button class="btn-primary rounded-2xl cursor-pointer w-24 h-8 bg-amber-300"
             (click)="register()">Registrar</button>
 

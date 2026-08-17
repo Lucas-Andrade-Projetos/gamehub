@@ -33,6 +33,10 @@
             <a class="hover:underline text-[12px] tracking-wide cursor-pointer">Esqueci minha senha</a>
         </div>
 
+        @if (errorMessage(); as message) {
+            <span class="text-red-600 text-[12px] w-[80%] text-center">{{ message }}</span>
+        }
+
         <button class="btn-primary rounded-2xl cursor-pointer w-24 h-8 bg-amber-300" (click)="login()">Entrar</button>
 
         <div class="label flex gap-1 justify-around items-center text-[12px]">

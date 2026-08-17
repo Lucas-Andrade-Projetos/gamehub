@@ -22,7 +22,7 @@ export class Nav {
     return this.state() === 'login' || this.state() === 'register';
   }
 
-  setState(state: NavState | any) {
+  setState(state: NavState) {
     this.state.set(state);
   }
 

@@ -1,4 +1,5 @@
-import { Component, inject, output } from '@angular/core';
+import { Component, inject, output, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { RegisterCreds } from '../../../types/user';
 import { AccountService } from '../../../core/services/account-service';
 import { FormsModule } from '@angular/forms';
@@ -16,14 +17,16 @@ export class Login {
   router = inject(Router);
   protected creds = {} as RegisterCreds;
   stateChange = output<NavState>();
+  errorMessage = signal<string | null>(null);
 
   login() {
+    this.errorMessage.set(null);
+
     this.accountService.login(this.creds).subscribe({
-      next: response => {
-        console.log(response);
-        this.router.navigate(['/home']);
+      next: () => this.router.navigate(['/home']),
+      error: (error: HttpErrorResponse) => {
+        this.errorMessage.set(typeof error.error === 'string' ? error.error : 'Não foi possível entrar. Tente novamente.');
       },
-      error: error => console.log(error)
     })
   }
 

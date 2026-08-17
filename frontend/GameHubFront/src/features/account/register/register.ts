@@ -1,5 +1,6 @@
-import { Component, inject, output } from '@angular/core';
+import { Component, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AccountService } from '../../../core/services/account-service';
 import { LoginCreds, RegisterCreds } from '../../../types/user';
 import { Router } from "@angular/router";
@@ -16,21 +17,22 @@ export class Register {
   router = inject(Router);
   protected creds = {} as RegisterCreds;
   stateChange = output<NavState>();
+  errorMessage = signal<string | null>(null);
 
   register() {
+    this.errorMessage.set(null);
+
     this.accountService.register(this.creds).subscribe({
       next: () => {
         this.accountService.login(this.toLoginCreds(this.creds)).subscribe({
-          next: () => {
-            this.router.navigate(['/home']);
+          next: () => this.router.navigate(['/home']),
+          error: () => {
+            this.errorMessage.set('Conta criada, mas não foi possível entrar automaticamente. Tente fazer login.');
           },
-          error: err => {
-            console.log('Auto login failed:', err);
-          }
         })
       },
-      error: error => {
-        console.log('Registration failed:', error);
+      error: (error: HttpErrorResponse) => {
+        this.errorMessage.set(typeof error.error === 'string' ? error.error : 'Não foi possível criar a conta. Tente novamente.');
       },
     })
   }

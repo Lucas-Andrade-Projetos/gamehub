@@ -28,8 +28,6 @@ internal class Program
             opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
         });
 
-        // builder.Services.AddSingleton<Users>();
-
         builder.Services.AddCors();
         builder.Services.AddSignalR()
             .AddJsonProtocol(options => options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));

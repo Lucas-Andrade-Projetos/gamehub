@@ -5,7 +5,7 @@ import { TokenInfo } from "../../helpers/TokenInfo";
 export class BoundRuler {
 
     static isOutOfBounds(tokenInfo: TokenInfo, board: Board): boolean {
-        if ((tokenInfo.baseZeroFinalPosX > board.tiles.length) || (tokenInfo.baseZeroFinalPosY > board.tiles.length)) {
+        if ((tokenInfo.baseZeroFinalPosX >= board.tiles.length) || (tokenInfo.baseZeroFinalPosY >= board.tiles.length)) {
             Logger.outOfBounds(tokenInfo)
             return true;
         }

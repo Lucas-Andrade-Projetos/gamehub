@@ -9,7 +9,7 @@ export class CollisionRuler {
     static isTileOccupied(tokenInfo: TokenInfo, board: Board): boolean {
         const tileStatus = board.tiles[tokenInfo.baseZeroPosY][tokenInfo.baseZeroPosX];
 
-        if (tileStatus != 'O') { Logger.collision; return true; }
+        if (tileStatus != 'O') { Logger.collision(); return true; }
 
         return false;
     }
@@ -21,7 +21,7 @@ export class CollisionRuler {
             for (let i = tokenInfo.baseZeroPosX; i < tokenInfo.baseZeroPosX + tokenInfo.tokenSize; i++) {
                 let char = board.tiles[tokenInfo.baseZeroPosY][i];
 
-                if (char != 'O') { Logger.collision; return true; }
+                if (char != 'O') { Logger.collision(); return true; }
             }
         }
 
@@ -32,7 +32,7 @@ export class CollisionRuler {
             for (let i = 0; i < tokenInfo.tokenSize; i++) {
                 let char = board.tiles[tokenInfo.baseZeroPosY][tokenInfo.baseZeroPosX - i];
 
-                if (char != 'O') { Logger.collision; return true; }
+                if (char != 'O') { Logger.collision(); return true; }
             }
         }
 
@@ -48,7 +48,7 @@ export class CollisionRuler {
             for (let i = 0; i < tokenInfo.tokenSize; i++) {
                 let char = board.tiles[tokenInfo.baseZeroPosY - i][tokenInfo.baseZeroPosX];
 
-                if (char != 'O') { Logger.collision; return true; }
+                if (char != 'O') { Logger.collision(); return true; }
             }
         }
 
@@ -59,7 +59,7 @@ export class CollisionRuler {
             for (let i = tokenInfo.baseZeroPosY; i < tokenInfo.baseZeroPosY + tokenInfo.tokenSize; i++) {
                 let char = board.tiles[i][tokenInfo.baseZeroPosX];
 
-                if (char != 'O') { Logger.collision; return true; }
+                if (char != 'O') { Logger.collision(); return true; }
             }
         }
 

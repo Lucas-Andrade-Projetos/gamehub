@@ -36,6 +36,6 @@ export class AccountService {
   logout() {
     localStorage.removeItem('user');
     this.currentUser.set(null);
-    this.router.navigate(['/login']);
+    this.router.navigate(['/home']);
   }
 }

@@ -38,7 +38,7 @@ public class AccountController(AppDbContext context, ITokenService tokenService)
     [HttpPost("login")]
     public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
     {
-        var user = context.Users.SingleOrDefault(u => u.Email == loginDto.Email);
+        var user = context.Users.FirstOrDefault(u => u.Email.ToLower() == loginDto.Email.ToLower());
 
         if (user == null) return Unauthorized("Invalid email or password");
 
@@ -46,10 +46,8 @@ public class AccountController(AppDbContext context, ITokenService tokenService)
 
         var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password));
 
-        for (var i = 0; i < computedHash.Length; i++)
-        {
-            if (computedHash[i] != user.PasswordHash[i]) return Unauthorized("Invalid email or password");
-        }
+        if (!CryptographicOperations.FixedTimeEquals(computedHash, user.PasswordHash))
+            return Unauthorized("Invalid email or password");
 
         return user.ToDto(tokenService);
     }
