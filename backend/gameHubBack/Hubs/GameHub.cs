@@ -28,6 +28,7 @@ public class GameHub(
         var room = roomRegistry.CreateRoom(userId, nickname, Context.ConnectionId);
 
         await Groups.AddToGroupAsync(Context.ConnectionId, room.Code);
+        await Clients.Caller.SendAsync("RoomUpdated", ToStateDto(room));
         await BroadcastOpenRooms();
 
         return room.Code;
@@ -125,13 +126,22 @@ public class GameHub(
 
     public async Task Attack(string gameId, string code, int x, int y)
     {
-        var (userId, _) = GetIdentity();
+        var (userId, nickname) = GetIdentity();
 
         var result = await gameService.AttackAsync(gameId, userId, x, y);
 
         if (result == null) return;
 
         await Clients.Group(code).SendAsync("AttackResolved", result);
+
+        if (result.Success)
+        {
+            var shotText = result.Hit
+                ? $"{nickname} disparou em (X {result.X + 1}, Y {result.Y + 1}) e estourou o coitado!"
+                : $"{nickname} disparou em (X {result.X + 1}, Y {result.Y + 1}), mas não acertou nada...";
+
+            await Clients.Group(code).SendAsync("ChatMessageReceived", SystemMessage(shotText));
+        }
 
         if (result.GameEnded && result.WinnerPlayerNum != null)
         {

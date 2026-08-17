@@ -13,7 +13,7 @@ public class RegisterDto
     public required string Nickname { get; set; }
 
     [Required]
-    [MinLength(7)]
+    [MinLength(12)]
     public required string Password { get; set; }
 
     [Required]

@@ -19,6 +19,9 @@ public class AccountController(AppDbContext context, ITokenService tokenService)
         if (context.Users.Any(x => x.Email.ToLower() == registerDto.Email.ToLower()))
             return Unauthorized("Email is already taken");
 
+        if (context.Users.Any(x => x.Nickname.ToLower() == registerDto.Nickname.ToLower()))
+            return Unauthorized("Nickname is already taken");
+
         using var hmac = new HMACSHA512();
 
         var user = new AppUser

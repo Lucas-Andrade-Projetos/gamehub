@@ -5,6 +5,7 @@ import { AccountService } from '../../../core/services/account-service';
 import { FormsModule } from '@angular/forms';
 import { Router } from "@angular/router";
 import { NavState } from '../../../types/NavState';
+import { extractErrorMessage } from '../../../core/utils/http-error';
 
 @Component({
   selector: 'app-login',
@@ -18,14 +19,17 @@ export class Login {
   protected creds = {} as RegisterCreds;
   stateChange = output<NavState>();
   errorMessage = signal<string | null>(null);
+  submitting = signal(false);
 
   login() {
     this.errorMessage.set(null);
+    this.submitting.set(true);
 
     this.accountService.login(this.creds).subscribe({
       next: () => this.router.navigate(['/home']),
       error: (error: HttpErrorResponse) => {
-        this.errorMessage.set(typeof error.error === 'string' ? error.error : 'Não foi possível entrar. Tente novamente.');
+        this.submitting.set(false);
+        this.errorMessage.set(extractErrorMessage(error, 'Não foi possível entrar. Tente novamente.'));
       },
     })
   }

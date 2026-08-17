@@ -1,12 +1,14 @@
-import { Component, computed, effect, inject, input, OnDestroy, OnInit, output, signal } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, OnDestroy, OnInit, output, signal, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { BatalhaRuralService, GameStateDto, PlayerStateDto, ShotDto } from '../../../../core/services/batalha-rural-service';
 import { GameHubService } from '../../../../core/services/game-hub-service';
 
 const BOARD_SIZE = 10;
+const AUTO_RETURN_SECONDS = 10;
 
 @Component({
   selector: 'app-batalha-rural-battle',
-  imports: [],
+  imports: [FormsModule],
   templateUrl: './battle.html',
   styleUrl: './battle.css',
 })
@@ -15,6 +17,8 @@ export class Battle implements OnInit, OnDestroy {
   roomCode = input.required<string>();
 
   returnedToRoom = output<void>();
+
+  @ViewChild('chatScroll') chatScrollRef?: ElementRef<HTMLDivElement>;
 
   private batalhaRuralService = inject(BatalhaRuralService);
   private gameHubService = inject(GameHubService);
@@ -27,9 +31,12 @@ export class Battle implements OnInit, OnDestroy {
   errorMessage = signal<string | null>(null);
   endReason = signal<'Normal' | 'Abandonment' | null>(null);
   remainingSeconds = signal<number | null>(null);
+  autoReturnSeconds = signal<number | null>(null);
+  messageInput = '';
 
   roomState = this.gameHubService.roomState;
-  statusMessages = computed(() => this.gameHubService.chatMessages().filter(m => m.isSystem));
+  chatLog = this.gameHubService.chatMessages;
+  private statusMessages = computed(() => this.gameHubService.chatMessages().filter(m => m.isSystem));
 
   ownPlayer = computed<PlayerStateDto | null>(() => this.game()?.players.find(p => p.playerNum === this.game()?.viewerPlayerNum) ?? null);
   opponentPlayer = computed<PlayerStateDto | null>(() => this.game()?.players.find(p => p.playerNum !== this.game()?.viewerPlayerNum) ?? null);
@@ -45,11 +52,18 @@ export class Battle implements OnInit, OnDestroy {
 
   private attacking = signal(false);
   private countdownHandle?: ReturnType<typeof setInterval>;
+  private autoReturnHandle?: ReturnType<typeof setInterval>;
+  private autoReturnDeadline: number | null = null;
   private statusMessageBaseline: number | null = null;
 
   constructor() {
     effect(() => {
       if (this.gameHubService.attackResolved()) this.refreshGame();
+    });
+
+    effect(() => {
+      this.chatLog();
+      setTimeout(() => this.scrollChatToBottom());
     });
 
     effect(() => {
@@ -61,6 +75,7 @@ export class Battle implements OnInit, OnDestroy {
       if (ended) {
         this.endReason.set(ended.reason);
         this.refreshGame();
+        this.scheduleAutoReturn();
       }
     });
 
@@ -93,6 +108,38 @@ export class Battle implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     if (this.countdownHandle) clearInterval(this.countdownHandle);
+    if (this.autoReturnHandle) clearInterval(this.autoReturnHandle);
+  }
+
+  private scheduleAutoReturn() {
+    if (this.autoReturnHandle) return;
+
+    this.autoReturnDeadline = Date.now() + AUTO_RETURN_SECONDS * 1000;
+    this.autoReturnSeconds.set(AUTO_RETURN_SECONDS);
+
+    this.autoReturnHandle = setInterval(() => {
+      const remaining = Math.max(0, Math.round((this.autoReturnDeadline! - Date.now()) / 1000));
+      this.autoReturnSeconds.set(remaining);
+
+      if (remaining <= 0) {
+        clearInterval(this.autoReturnHandle);
+        this.autoReturnHandle = undefined;
+        this.returnToRoom();
+      }
+    }, 500);
+  }
+
+  sendMessage() {
+    const text = this.messageInput.trim();
+    if (!text) return;
+
+    this.gameHubService.sendMessage(this.roomCode(), text);
+    this.messageInput = '';
+  }
+
+  private scrollChatToBottom() {
+    const el = this.chatScrollRef?.nativeElement;
+    if (el) el.scrollTop = el.scrollHeight;
   }
 
   private updateCountdown() {
@@ -172,6 +219,11 @@ export class Battle implements OnInit, OnDestroy {
   }
 
   async returnToRoom() {
+    if (this.autoReturnHandle) {
+      clearInterval(this.autoReturnHandle);
+      this.autoReturnHandle = undefined;
+    }
+
     await this.gameHubService.returnToRoom(this.roomCode());
     this.gameHubService.resetBattleFlow();
     this.returnedToRoom.emit();
