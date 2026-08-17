@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using gameHubBack.Entities;
 using gameHubBack.Interfaces;
+using gameHubBack.Services;
 using Microsoft.IdentityModel.Tokens;
 
 namespace gameHubBack.services;
@@ -30,8 +31,10 @@ public class TokenService(IConfiguration config) : ITokenService
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.Now.AddDays(1),
-            SigningCredentials = creds
+            Expires = DateTime.UtcNow.AddDays(1),
+            SigningCredentials = creds,
+            Issuer = JwtSettings.Issuer,
+            Audience = JwtSettings.Audience
         };
 
         var tokenHandler = new JwtSecurityTokenHandler();

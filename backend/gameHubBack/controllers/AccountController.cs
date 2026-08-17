@@ -6,6 +6,8 @@ using gameHubBack.Entities;
 using gameHubBack.Extensions;
 using gameHubBack.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 
 namespace gameHubBack.Controllers;
 
@@ -16,10 +18,13 @@ public class AccountController(AppDbContext context, ITokenService tokenService)
     [HttpPost("register")]
     public async Task<ActionResult<UserDto>> Register(RegisterDto registerDto)
     {
-        if (context.Users.Any(x => x.Email.ToLower() == registerDto.Email.ToLower()))
+        var normalizedEmail = registerDto.Email.ToUpperInvariant();
+        var normalizedNickname = registerDto.Nickname.ToUpperInvariant();
+
+        if (context.Users.Any(x => x.NormalizedEmail == normalizedEmail))
             return Unauthorized("Email is already taken");
 
-        if (context.Users.Any(x => x.Nickname.ToLower() == registerDto.Nickname.ToLower()))
+        if (context.Users.Any(x => x.NormalizedNickname == normalizedNickname))
             return Unauthorized("Nickname is already taken");
 
         using var hmac = new HMACSHA512();
@@ -28,20 +33,35 @@ public class AccountController(AppDbContext context, ITokenService tokenService)
         {
             Email = registerDto.Email,
             Nickname = registerDto.Nickname,
+            NormalizedEmail = normalizedEmail,
+            NormalizedNickname = normalizedNickname,
             PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(registerDto.Password)),
             PasswordSalt = hmac.Key
         };
 
         context.Users.Add(user);
-        await context.SaveChangesAsync();
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            // the Any() checks above are a fast path for a friendly message; this catches the
+            // race where two requests for the same email/nickname pass those checks concurrently -
+            // the unique index on NormalizedEmail/NormalizedNickname is the real guarantee.
+            return Unauthorized("Email or nickname is already taken");
+        }
 
         return user.ToDto(tokenService);
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting("login")]
     public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
     {
-        var user = context.Users.FirstOrDefault(u => u.Email.ToLower() == loginDto.Email.ToLower());
+        var normalizedEmail = loginDto.Email.ToUpperInvariant();
+        var user = context.Users.FirstOrDefault(u => u.NormalizedEmail == normalizedEmail);
 
         if (user == null) return Unauthorized("Invalid email or password");
 

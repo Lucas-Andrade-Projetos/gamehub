@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { Nav } from "../layout/nav/nav";
 import { AccountService } from '../core/services/account-service';
 import { RouterOutlet } from '@angular/router';
+import { isTokenExpired } from '../core/utils/jwt';
 
 @Component({
   selector: 'app-root',
@@ -20,7 +21,20 @@ export class App {
   setCurrentUser() {
     const userString = localStorage.getItem('user');
     if (!userString) return;
-    const user = JSON.parse(userString);
+
+    let user;
+    try {
+      user = JSON.parse(userString);
+    } catch {
+      localStorage.removeItem('user');
+      return;
+    }
+
+    if (!user?.token || isTokenExpired(user.token)) {
+      localStorage.removeItem('user');
+      return;
+    }
+
     this.accountService.currentUser.set(user);
   }
 }

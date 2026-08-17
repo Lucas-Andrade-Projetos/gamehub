@@ -15,6 +15,14 @@ public class AppDbContext(DbContextOptions options) : DbContext(options)
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<AppUser>()
+            .HasIndex(u => u.NormalizedEmail)
+            .IsUnique();
+
+        modelBuilder.Entity<AppUser>()
+            .HasIndex(u => u.NormalizedNickname)
+            .IsUnique();
+
         modelBuilder.Entity<BatalhaRuralGame>()
             .HasMany(g => g.Players)
             .WithOne(p => p.Game)

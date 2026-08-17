@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using gameHubBack.Data;
 using gameHubBack.Hubs;
 using gameHubBack.Interfaces;
@@ -8,6 +9,7 @@ using gameHubBack.Services;
 using gameHubBack.Services.BatalhaRural;
 using gameHubBack.Services.Rooms;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
@@ -36,6 +38,21 @@ internal class Program
         builder.Services.AddSingleton<GameLocks>();
         builder.Services.AddSingleton<DelayedActionScheduler>();
         builder.Services.AddSingleton<IRoomRegistry, RoomRegistry>();
+
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+            options.AddPolicy("login", httpContext => RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 5,
+                    Window = TimeSpan.FromMinutes(15),
+                    QueueLimit = 0
+                }));
+        });
+
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
@@ -46,8 +63,10 @@ internal class Program
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenKey)),
-                ValidateIssuer = false,
-                ValidateAudience = false
+                ValidateIssuer = true,
+                ValidIssuer = JwtSettings.Issuer,
+                ValidateAudience = true,
+                ValidAudience = JwtSettings.Audience
             };
 
             options.Events = new JwtBearerEvents
@@ -83,6 +102,7 @@ internal class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseRateLimiter();
 
         app.MapControllers();
         app.MapHub<GameHub>("/hubs/game");
