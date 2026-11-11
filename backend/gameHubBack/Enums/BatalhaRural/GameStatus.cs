@@ -4,5 +4,7 @@ public enum GameStatus
 {
     Preparing,
     InProgress,
-    Ended
+    Ended,
+    // game interrupted without a result (e.g. the server restarted mid-match)
+    Cancelled
 }

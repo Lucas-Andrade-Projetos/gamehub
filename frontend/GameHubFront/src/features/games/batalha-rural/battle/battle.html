@@ -116,6 +116,31 @@
                         }
                     </p>
                 }
+                @if (endReason() === 'Inactivity') {
+                    <p class="font-yusei text-white text-center">
+                        @if (ownPlayer()?.playerStatus === 'Winner') {
+                            O adversário deixou o tempo acabar 3 vezes seguidas.
+                        } @else {
+                            Você deixou o tempo acabar 3 vezes seguidas.
+                        }
+                    </p>
+                }
+                @if (canRematch()) {
+                    @if (iWantRematch()) {
+                        <p class="font-yusei text-white text-center animate-pulse">Aguardando o adversário aceitar a revanche...</p>
+                    } @else {
+                        @if (opponentWantsRematch()) {
+                            <p class="font-yusei text-amber-300 text-center">O adversário quer revanche!</p>
+                        }
+                        <button
+                            class="font-duality tracking-wide bg-amber-500 text-black rounded-lg px-6 py-2 cursor-pointer shadow-lg
+                                hover:bg-amber-400 hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            [disabled]="requestingRematch()"
+                            (click)="requestRematch()">
+                            {{ opponentWantsRematch() ? 'ACEITAR REVANCHE' : 'REVANCHE' }}
+                        </button>
+                    }
+                }
                 <button
                     class="font-duality tracking-wide border-2 border-amber-500 text-white rounded-lg px-6 py-2 cursor-pointer shadow-lg
                         hover:bg-amber-400 hover:text-black hover:scale-105 transition-all duration-200"

@@ -33,7 +33,14 @@ public class DelayedActionScheduler
                 return;
             }
 
-            if (!token.IsCancellationRequested) await action();
+            if (token.IsCancellationRequested) return;
+
+            // drop our own entry before running, so finished timers don't pile up in the
+            // dictionary. Only removes it if it's still ours - if the action reschedules the
+            // same key, that new timer is left alone.
+            if (_timers.TryRemove(new KeyValuePair<string, CancellationTokenSource>(key, cts))) cts.Dispose();
+
+            await action();
         });
     }
 

@@ -1,4 +1,4 @@
-import { Component, effect, inject, OnDestroy, signal } from '@angular/core';
+import { Component, effect, inject, OnDestroy, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { BatalhaRuralService } from '../../../core/services/batalha-rural-service';
 import { GameHubService } from '../../../core/services/game-hub-service';
@@ -24,6 +24,7 @@ export class BatalhaRural implements OnDestroy {
   roomCode = signal<string | null>(null);
   gameId = signal<string | null>(null);
   connectError = signal<string | null>(null);
+  notice = signal<string | null>(null);
 
   constructor() {
     this.gameHubService
@@ -54,6 +55,19 @@ export class BatalhaRural implements OnDestroy {
     });
 
     effect(() => {
+      // reconnected but the room no longer exists on the server (it restarted, or the room was
+      // cleaned up) - don't leave the player stuck on a dead lobby/match screen
+      if (this.gameHubService.roomLost() === 0) return;
+
+      untracked(() => {
+        if (this.phase() === 'room-select') return;
+
+        this.onLeftRoom();
+        this.notice.set('A sala não existe mais (o servidor pode ter sido reiniciado). Crie ou entre em outra sala.');
+      });
+    });
+
+    effect(() => {
       const room = this.gameHubService.rejoined();
       if (!room) return;
 
@@ -74,6 +88,7 @@ export class BatalhaRural implements OnDestroy {
   }
 
   onRoomJoined(code: string) {
+    this.notice.set(null);
     this.gameHubService.rememberRoom(code);
     this.roomCode.set(code);
     this.phase.set('lobby');

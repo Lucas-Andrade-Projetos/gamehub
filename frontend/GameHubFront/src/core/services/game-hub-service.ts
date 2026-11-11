@@ -12,6 +12,7 @@ export interface RoomPlayerInfo {
   nickname: string;
   ready: boolean;
   connected: boolean;
+  wantsRematch: boolean;
 }
 
 export interface RoomState {
@@ -46,9 +47,11 @@ export interface AttackResolvedEvent {
   winnerPlayerNum: ApiPlayerNum | null;
 }
 
+export type GameEndReason = 'Normal' | 'Abandonment' | 'Inactivity';
+
 export interface GameEndedEvent {
   winnerPlayerNum: ApiPlayerNum;
-  reason: 'Normal' | 'Abandonment';
+  reason: GameEndReason;
 }
 
 @Injectable({
@@ -69,6 +72,8 @@ export class GameHubService {
   turnTimedOut = signal(0);
   gameEnded = signal<GameEndedEvent | null>(null);
   rejoined = signal<RoomState | null>(null);
+  // bumped whenever an auto-rejoin finds the remembered room gone (e.g. server restarted)
+  roomLost = signal(0);
 
   connect(): Promise<void> {
     if (this.hubConnection && this.hubConnection.state !== HubConnectionState.Disconnected) {
@@ -87,7 +92,12 @@ export class GameHubService {
       this.chatMessages.update(messages => [...messages, message])
     );
     this.hubConnection.on('RoomListUpdated', (rooms: RoomSummary[]) => this.openRooms.set(rooms));
-    this.hubConnection.on('GameReady', (gameId: string) => this.gameReadyGameId.set(gameId));
+    this.hubConnection.on('GameReady', (gameId: string) => {
+      // a rematch starts straight from the end-of-game screen, so the previous match's flow
+      // signals (battleStarting, gameEnded...) are still set - clear them for the new game
+      this.resetBattleFlow();
+      this.gameReadyGameId.set(gameId);
+    });
     this.hubConnection.on('BattleStarting', () => this.battleStarting.set(true));
     this.hubConnection.on('AttackResolved', (event: AttackResolvedEvent) => this.attackResolved.set(event));
     this.hubConnection.on('TurnTimedOut', () => this.turnTimedOut.update(n => n + 1));
@@ -140,6 +150,10 @@ export class GameHubService {
     return this.requireConnection().invoke('ReturnToRoom', code);
   }
 
+  requestRematch(code: string): Promise<void> {
+    return this.requireConnection().invoke('RequestRematch', code);
+  }
+
   leaveRoom(code: string): Promise<void> {
     this.forgetRoom();
     return this.requireConnection().invoke('LeaveRoom', code);
@@ -172,9 +186,11 @@ export class GameHubService {
         this.rejoined.set(room);
       } else {
         this.forgetRoom();
+        this.roomLost.update(n => n + 1);
       }
     } catch {
       this.forgetRoom();
+      this.roomLost.update(n => n + 1);
     }
   }
 

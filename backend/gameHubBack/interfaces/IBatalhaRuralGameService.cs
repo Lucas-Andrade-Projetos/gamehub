@@ -10,15 +10,19 @@ public interface IBatalhaRuralGameService
 
     Task<BatalhaRuralGame?> GetGameAsync(string gameId);
 
-    Task<PlacementResult?> PlaceTokenAsync(BatalhaRuralPlayer player, int tokenIndex, int positionX, int positionY, Direction direction);
+    Task<PlacementResult?> PlaceAllTokensAsync(string gameId, string userId, IReadOnlyList<TokenPlacement> placements);
 
-    Task<bool> SetPlayerReadyAsync(string gameId, string userId);
+    Task<ReadyResult> SetPlayerReadyAsync(string gameId, string userId);
+
+    Task<List<string>?> AutoCompletePlacementAsync(string gameId);
 
     Task<AttackResult?> AttackAsync(string gameId, string attackerUserId, int x, int y);
 
     Task<AttackResult?> TimeoutTurnAsync(string gameId);
 
-    Task<DateTime?> RefreshTurnDeadlineAsync(string gameId);
+    Task<DateTime?> RefreshTurnDeadlineAsync(string gameId, string rejoiningUserId);
+
+    Task<int> CancelUnfinishedGamesAsync();
 
     Task<AttackResult?> ForfeitAsync(string gameId, string disconnectedUserId);
 }

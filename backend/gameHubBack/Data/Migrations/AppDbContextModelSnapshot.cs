@@ -96,6 +96,9 @@ namespace gameHubBack.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb");
 
+                    b.Property<int>("ConsecutiveTimeouts")
+                        .HasColumnType("integer");
+
                     b.Property<string>("GameId")
                         .IsRequired()
                         .HasColumnType("text");

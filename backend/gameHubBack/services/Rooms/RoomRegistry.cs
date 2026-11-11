@@ -55,6 +55,11 @@ public class RoomRegistry : IRoomRegistry
         return room;
     }
 
+    public GameRoom? GetRoomByConnection(string connectionId)
+    {
+        return _connectionToRoom.TryGetValue(connectionId, out var code) ? GetRoom(code) : null;
+    }
+
     public bool SetReady(string code, string userId, bool ready)
     {
         var room = GetRoom(code);
@@ -77,10 +82,61 @@ public class RoomRegistry : IRoomRegistry
         if (!_rooms.TryGetValue(code, out var room)) return null;
 
         room.GameId = null;
-        if (room.Player1 != null) room.Player1.Ready = false;
-        if (room.Player2 != null) room.Player2.Ready = false;
+
+        // a player who dropped during the match and never came back would otherwise hold the
+        // slot forever, leaving the room full with a ghost
+        if (room.Player1?.Connected == false) room.Player1 = null;
+        if (room.Player2?.Connected == false) room.Player2 = null;
+
+        if (room.Player1 == null && room.Player2 == null)
+        {
+            _rooms.TryRemove(code, out _);
+            return null;
+        }
+
+        foreach (var player in new[] { room.Player1, room.Player2 })
+        {
+            if (player == null) continue;
+
+            player.Ready = false;
+            player.WantsRematch = false;
+        }
 
         return room;
+    }
+
+    // Records the player's rematch vote. Returns true to exactly one caller - the one whose
+    // vote completes the pair - and clears both votes, so two simultaneous clicks can't start
+    // two games.
+    public bool RequestRematch(string code, string userId)
+    {
+        if (!_rooms.TryGetValue(code, out var room)) return false;
+
+        lock (room)
+        {
+            var player = room.Player1?.UserId == userId ? room.Player1
+                : room.Player2?.UserId == userId ? room.Player2
+                : null;
+
+            if (player == null) return false;
+
+            player.WantsRematch = true;
+
+            if (room.Player1?.WantsRematch != true || room.Player2?.WantsRematch != true) return false;
+
+            room.Player1.WantsRematch = false;
+            room.Player2.WantsRematch = false;
+
+            return true;
+        }
+    }
+
+    public bool RemoveRoomIfAbandoned(string code)
+    {
+        if (!_rooms.TryGetValue(code, out var room)) return false;
+        if (room.Player1?.Connected == true || room.Player2?.Connected == true) return false;
+
+        return _rooms.TryRemove(code, out _);
     }
 
     public GameRoom? TryRejoin(string code, string userId, string connectionId)

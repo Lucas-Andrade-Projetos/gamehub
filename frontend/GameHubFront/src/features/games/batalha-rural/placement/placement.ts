@@ -1,7 +1,7 @@
-import { Component, computed, ElementRef, HostListener, inject, input, signal, ViewChild } from '@angular/core';
+import { Component, computed, ElementRef, HostListener, inject, input, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { AccountService } from '../../../../core/services/account-service';
-import { ApiDirection, BatalhaRuralService } from '../../../../core/services/batalha-rural-service';
+import { ApiDirection, BatalhaRuralService, PlacementFailureReason } from '../../../../core/services/batalha-rural-service';
 import { GameHubService } from '../../../../core/services/game-hub-service';
 import { Board } from '../../../../Games/batalhaRural/entities/Board';
 import { Token } from '../../../../Games/batalhaRural/entities/Token';
@@ -22,6 +22,7 @@ interface Cell {
 }
 
 const BOARD_SIZE = 10;
+const AUTO_CONFIRM_SECONDS = 3;
 
 const DIRECTION_NAMES: Record<Direction, ApiDirection> = {
   [Direction.Left]: 'Left',
@@ -39,7 +40,15 @@ const DIRECTION_ARROWS: Record<Direction, string> = {
   [Direction.Down]: '↓',
 };
 
-const ROTATION_ORDER = [Direction.Right, Direction.Down, Direction.Left, Direction.Up];
+const PLACEMENT_FAILURE_MESSAGES: Record<PlacementFailureReason, string> = {
+  InvalidInput: 'posição inválida',
+  OutOfBounds: 'fora do tabuleiro',
+  Collision: 'sobreposta a outra peça',
+  NotAllowed: 'o posicionamento já foi encerrado',
+  IncompleteSet: 'faltam peças a posicionar',
+};
+
+const ROTATION_ORDER =[Direction.Right, Direction.Down, Direction.Left, Direction.Up];
 
 function nextDirection(current: Direction): Direction {
   const index = ROTATION_ORDER.indexOf(current);
@@ -52,7 +61,7 @@ function nextDirection(current: Direction): Direction {
   templateUrl: './placement.html',
   styleUrl: './placement.css',
 })
-export class Placement {
+export class Placement implements OnInit, OnDestroy {
   gameId = input.required<string>();
   roomCode = input.required<string>();
 
@@ -88,6 +97,43 @@ export class Placement {
   });
 
   allPlaced = computed(() => this.tokenViewModels().every(vm => vm.placed));
+
+  remainingSeconds = signal<number | null>(null);
+  private placementDeadline: number | null = null;
+  private countdownHandle?: ReturnType<typeof setInterval>;
+  private autoConfirmAttempted = false;
+
+  ngOnInit() {
+    // while the game is Preparing, the server's turnExpiresAt is the placement deadline
+    this.batalhaRuralService.getGame(this.gameId()).subscribe({
+      next: game => {
+        if (game.status !== 'Preparing' || !game.turnExpiresAt) return;
+
+        this.placementDeadline = new Date(game.turnExpiresAt).getTime();
+        this.updateCountdown();
+        this.countdownHandle = setInterval(() => this.updateCountdown(), 500);
+      },
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.countdownHandle) clearInterval(this.countdownHandle);
+  }
+
+  private updateCountdown() {
+    if (this.placementDeadline === null) return;
+
+    const remaining = Math.max(0, Math.round((this.placementDeadline - Date.now()) / 1000));
+    this.remainingSeconds.set(remaining);
+
+    // everything is on the board but not confirmed yet - confirm it for the player instead of
+    // letting the server throw their layout away for a random one
+    if (remaining <= AUTO_CONFIRM_SECONDS && !this.autoConfirmAttempted && this.allPlaced()
+      && !this.waitingForOpponent() && !this.submitting()) {
+      this.autoConfirmAttempted = true;
+      this.finalizePlacement();
+    }
+  }
 
   preview = computed(() => {
     const index = this.draggingIndex();
@@ -255,19 +301,27 @@ export class Placement {
     this.errorMessage.set(null);
 
     try {
-      for (const viewModel of this.tokenViewModels()) {
-        const result = await firstValueFrom(
-          this.batalhaRuralService.placeToken(this.gameId(), viewModel.index, {
-            positionX: viewModel.token.positionX,
-            positionY: viewModel.token.positionY,
-            direction: DIRECTION_NAMES[viewModel.token.direction],
-          })
-        );
+      const viewModels = this.tokenViewModels();
+      const result = await firstValueFrom(
+        this.batalhaRuralService.placeTokens(
+          this.gameId(),
+          viewModels.map(vm => ({
+            index: vm.index,
+            positionX: vm.token.positionX,
+            positionY: vm.token.positionY,
+            direction: DIRECTION_NAMES[vm.token.direction],
+          }))
+        )
+      );
 
-        if (!result.success) {
-          this.errorMessage.set(`Não foi possível confirmar a peça ${viewModel.token.name} (${result.reason}).`);
-          return;
-        }
+      if (!result.success) {
+        const reason = PLACEMENT_FAILURE_MESSAGES[result.reason ?? 'InvalidInput'];
+        const token = viewModels.find(vm => vm.index === result.tokenIndex)?.token;
+
+        this.errorMessage.set(
+          token ? `Não foi possível confirmar a peça ${token.name}: ${reason}.` : `Não foi possível confirmar: ${reason}.`
+        );
+        return;
       }
 
       await this.gameHubService.notifyPlacementReady(this.gameId(), this.roomCode());

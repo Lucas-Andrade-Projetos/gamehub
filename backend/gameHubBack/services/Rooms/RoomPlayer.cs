@@ -7,4 +7,5 @@ public class RoomPlayer
     public required string ConnectionId { get; set; }
     public bool Ready { get; set; }
     public bool Connected { get; set; } = true;
+    public bool WantsRematch { get; set; }
 }

@@ -1,7 +1,7 @@
-import { Component, computed, effect, ElementRef, inject, input, OnDestroy, OnInit, output, signal, ViewChild } from '@angular/core';
+import { Component, computed, effect, ElementRef, inject, input, OnDestroy, OnInit, output, signal, untracked, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BatalhaRuralService, GameStateDto, PlayerStateDto, ShotDto } from '../../../../core/services/batalha-rural-service';
-import { GameHubService } from '../../../../core/services/game-hub-service';
+import { GameEndReason, GameHubService } from '../../../../core/services/game-hub-service';
 import { animalEmoji } from '../../../../Games/batalhaRural/helpers/AnimalEmoji';
 
 const BOARD_SIZE = 10;
@@ -30,7 +30,7 @@ export class Battle implements OnInit, OnDestroy {
   showingReveal = signal(true);
   revealFadingOut = signal(false);
   errorMessage = signal<string | null>(null);
-  endReason = signal<'Normal' | 'Abandonment' | null>(null);
+  endReason = signal<GameEndReason | null>(null);
   remainingSeconds = signal<number | null>(null);
   autoReturnSeconds = signal<number | null>(null);
   messageInput = '';
@@ -46,6 +46,12 @@ export class Battle implements OnInit, OnDestroy {
   opponentConnected = computed(() => this.roomPlayerFor(this.opponentPlayer())?.connected ?? true);
 
   gameEnded = computed(() => this.game()?.status === 'Ended');
+
+  iWantRematch = computed(() => this.roomPlayerFor(this.ownPlayer())?.wantsRematch ?? false);
+  opponentWantsRematch = computed(() => this.roomPlayerFor(this.opponentPlayer())?.wantsRematch ?? false);
+  canRematch = computed(() => this.gameEnded() && this.opponentConnected() && this.roomState()?.gameId === this.gameId());
+  requestingRematch = signal(false);
+  private rematchInPlay = false;
   isMyTurn = computed(() => {
     const game = this.game();
     return !!game && game.currentTurnPlayerNum === game.viewerPlayerNum;
@@ -77,6 +83,24 @@ export class Battle implements OnInit, OnDestroy {
         this.endReason.set(ended.reason);
         this.refreshGame();
         this.scheduleAutoReturn();
+      }
+    });
+
+    effect(() => {
+      // Rematch on the end screen. Once anyone asks for one, stop the auto-return so the other
+      // player has time to answer. If the rematch falls through (the opponent went back to the
+      // room or left), there's nothing left to wait for - go to the room.
+      const room = this.roomState();
+      if (!this.gameEnded() || !room) return;
+
+      if (this.iWantRematch() || this.opponentWantsRematch()) {
+        this.rematchInPlay = true;
+        untracked(() => this.cancelAutoReturn());
+      }
+
+      if (this.rematchInPlay && (room.gameId === null || !this.opponentConnected())) {
+        this.rematchInPlay = false;
+        untracked(() => this.returnToRoom());
       }
     });
 
@@ -219,11 +243,32 @@ export class Battle implements OnInit, OnDestroy {
     }
   }
 
-  async returnToRoom() {
+  async requestRematch() {
+    if (this.requestingRematch()) return;
+
+    this.requestingRematch.set(true);
+    this.cancelAutoReturn();
+
+    try {
+      await this.gameHubService.requestRematch(this.roomCode());
+    } catch {
+      this.errorMessage.set('Não foi possível pedir revanche.');
+    } finally {
+      this.requestingRematch.set(false);
+    }
+  }
+
+  private cancelAutoReturn() {
     if (this.autoReturnHandle) {
       clearInterval(this.autoReturnHandle);
       this.autoReturnHandle = undefined;
     }
+
+    this.autoReturnSeconds.set(null);
+  }
+
+  async returnToRoom() {
+    this.cancelAutoReturn();
 
     await this.gameHubService.returnToRoom(this.roomCode());
     this.gameHubService.resetBattleFlow();

@@ -14,4 +14,5 @@ public class BatalhaRuralPlayer
     public required string[][] BoardTiles { get; set; }
     public required List<GameToken> Tokens { get; set; }
     public List<Shot> ShotsReceived { get; set; } = [];
+    public int ConsecutiveTimeouts { get; set; }
 }

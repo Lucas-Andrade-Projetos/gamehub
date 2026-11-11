@@ -6,4 +6,5 @@ public class RoomPlayerDto
     public required string Nickname { get; set; }
     public required bool Ready { get; set; }
     public required bool Connected { get; set; }
+    public bool WantsRematch { get; set; }
 }

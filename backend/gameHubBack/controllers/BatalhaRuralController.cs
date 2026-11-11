@@ -2,6 +2,7 @@ using System.Security.Claims;
 using gameHubBack.DTOs.BatalhaRural;
 using gameHubBack.Extensions;
 using gameHubBack.Interfaces;
+using gameHubBack.Services.BatalhaRural;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,26 +24,22 @@ public class BatalhaRuralController(IBatalhaRuralGameService gameService) : Cont
         return game.ToDto(CurrentUserId);
     }
 
-    [HttpPost("{gameId}/tokens/{tokenIndex:int}/place")]
-    public async Task<ActionResult<PlaceTokenResultDto>> PlaceToken(string gameId, int tokenIndex, PlaceTokenDto placeTokenDto)
+    [HttpPut("{gameId}/placement")]
+    public async Task<ActionResult<PlacementResultDto>> PlaceTokens(string gameId, PlaceTokensDto placeTokensDto)
     {
-        var game = await gameService.GetGameAsync(gameId);
+        var placements = placeTokensDto.Tokens
+            .Select(t => new TokenPlacement(t.Index, t.PositionX, t.PositionY, t.Direction))
+            .ToList();
 
-        if (game == null) return NotFound("Game not found");
+        var result = await gameService.PlaceAllTokensAsync(gameId, CurrentUserId, placements);
 
-        var player = game.Players.SingleOrDefault(p => p.UserId == CurrentUserId);
+        if (result == null) return NotFound("Game not found");
 
-        if (player == null) return Forbid();
-
-        var result = await gameService.PlaceTokenAsync(player, tokenIndex, placeTokenDto.PositionX, placeTokenDto.PositionY, placeTokenDto.Direction);
-
-        if (result == null) return NotFound("Token not found");
-
-        return new PlaceTokenResultDto
+        return new PlacementResultDto
         {
             Success = result.Success,
             Reason = result.Reason,
-            Player = player.ToDto(CurrentUserId)
+            TokenIndex = result.TokenIndex
         };
     }
 

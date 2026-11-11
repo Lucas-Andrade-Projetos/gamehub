@@ -40,16 +40,19 @@ export interface GameStateDto {
   players: PlayerStateDto[];
 }
 
-export interface PlaceTokenRequest {
+export interface TokenPlacementRequest {
+  index: number;
   positionX: number;
   positionY: number;
   direction: ApiDirection;
 }
 
-export interface PlaceTokenResultDto {
+export type PlacementFailureReason = 'InvalidInput' | 'OutOfBounds' | 'Collision' | 'NotAllowed' | 'IncompleteSet';
+
+export interface PlacementResultDto {
   success: boolean;
-  reason: string | null;
-  player: PlayerStateDto;
+  reason: PlacementFailureReason | null;
+  tokenIndex: number | null;
 }
 
 @Injectable({
@@ -64,7 +67,7 @@ export class BatalhaRuralService {
     return this.http.get<GameStateDto>(`${this.baseUrl}/${gameId}`);
   }
 
-  placeToken(gameId: string, tokenIndex: number, body: PlaceTokenRequest) {
-    return this.http.post<PlaceTokenResultDto>(`${this.baseUrl}/${gameId}/tokens/${tokenIndex}/place`, body);
+  placeTokens(gameId: string, tokens: TokenPlacementRequest[]) {
+    return this.http.put<PlacementResultDto>(`${this.baseUrl}/${gameId}/placement`, { tokens });
   }
 }

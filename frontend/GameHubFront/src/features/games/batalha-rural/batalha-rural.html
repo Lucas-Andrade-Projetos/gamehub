@@ -8,6 +8,13 @@
     } @else {
         @switch (phase()) {
             @case ('room-select') {
+                @if (notice()) {
+                    <div class="flex justify-center px-6 pt-6">
+                        <p class="font-yusei text-center text-amber-900 bg-white/85 backdrop-blur-sm border-2 border-amber-400 rounded-xl px-6 py-3 shadow-lg max-w-md">
+                            {{ notice() }}
+                        </p>
+                    </div>
+                }
                 <app-batalha-rural-room-select (roomJoined)="onRoomJoined($event)" />
             }
             @case ('lobby') {

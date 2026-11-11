@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
-internal class Program
+public partial class Program
 {
     private static void Main(string[] args)
     {
@@ -36,6 +36,7 @@ internal class Program
         builder.Services.AddScoped<ITokenService, TokenService>();
         builder.Services.AddScoped<IBatalhaRuralGameService, GameService>();
         builder.Services.AddSingleton<GameLocks>();
+        builder.Services.AddSingleton<BatalhaRuralTimings>();
         builder.Services.AddSingleton<DelayedActionScheduler>();
         builder.Services.AddSingleton<IRoomRegistry, RoomRegistry>();
 
@@ -86,6 +87,25 @@ internal class Program
         });
 
         var app = builder.Build();
+
+        // rooms and timers are in-memory only: matches left open by a previous run can never
+        // be resumed, so close them before accepting connections
+        using (var scope = app.Services.CreateScope())
+        {
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+            try
+            {
+                var cancelled = scope.ServiceProvider.GetRequiredService<IBatalhaRuralGameService>()
+                    .CancelUnfinishedGamesAsync().GetAwaiter().GetResult();
+
+                if (cancelled > 0) logger.LogInformation("Cancelled {Count} unfinished Batalha Rural game(s) from a previous run", cancelled);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to cancel unfinished Batalha Rural games on startup");
+            }
+        }
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
