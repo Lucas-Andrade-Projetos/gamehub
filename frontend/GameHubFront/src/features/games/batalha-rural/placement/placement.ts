@@ -7,6 +7,7 @@ import { Board } from '../../../../Games/batalhaRural/entities/Board';
 import { Token } from '../../../../Games/batalhaRural/entities/Token';
 import { Tokens } from '../../../../Games/batalhaRural/entities/Tokens';
 import { Direction } from '../../../../Games/batalhaRural/enums/Direction';
+import { animalEmoji } from '../../../../Games/batalhaRural/helpers/AnimalEmoji';
 import { defaultDirectionFor, PlacementHelper } from '../../../../Games/batalhaRural/helpers/PlacementHelper';
 
 interface TokenViewModel {
@@ -240,7 +241,11 @@ export class Placement {
 
   cellChar(x: number, y: number): string {
     const char = this.board().tiles[y][x];
-    return char === 'O' ? '' : char;
+    return char === 'O' ? '' : animalEmoji(char);
+  }
+
+  tokenEmoji(character: string): string {
+    return animalEmoji(character);
   }
 
   async finalizePlacement() {

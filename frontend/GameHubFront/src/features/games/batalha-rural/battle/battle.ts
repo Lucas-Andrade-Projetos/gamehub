@@ -2,6 +2,7 @@ import { Component, computed, effect, ElementRef, inject, input, OnDestroy, OnIn
 import { FormsModule } from '@angular/forms';
 import { BatalhaRuralService, GameStateDto, PlayerStateDto, ShotDto } from '../../../../core/services/batalha-rural-service';
 import { GameHubService } from '../../../../core/services/game-hub-service';
+import { animalEmoji } from '../../../../Games/batalhaRural/helpers/AnimalEmoji';
 
 const BOARD_SIZE = 10;
 const AUTO_RETURN_SECONDS = 10;
@@ -184,10 +185,10 @@ export class Battle implements OnInit, OnDestroy {
 
   ownCellChar(x: number, y: number): string {
     const shot = this.shotAt(this.ownPlayer(), x, y);
-    if (shot) return shot.hit ? 'X' : '•';
+    if (shot) return shot.hit ? '🔥' : '💧';
 
     const cell = this.ownPlayer()?.board[y]?.[x];
-    return cell && cell !== 'O' ? cell : '';
+    return cell && cell !== 'O' ? animalEmoji(cell) : '';
   }
 
   canAttack(x: number, y: number): boolean {
@@ -203,7 +204,7 @@ export class Battle implements OnInit, OnDestroy {
 
   opponentCellChar(x: number, y: number): string {
     const shot = this.shotAt(this.opponentPlayer(), x, y);
-    return shot ? (shot.hit ? 'X' : '•') : '';
+    return shot ? (shot.hit ? '🔥' : '💧') : '';
   }
 
   async attackCell(x: number, y: number) {

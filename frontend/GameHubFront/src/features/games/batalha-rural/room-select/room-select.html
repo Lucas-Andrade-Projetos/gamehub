@@ -1,8 +1,13 @@
-<div class="flex flex-col items-center gap-8 pt-40 pb-10 min-h-screen">
-    <h2 class="font-duality text-3xl tracking-wide select-none">Batalha Rural</h2>
+<div class="flex flex-col items-center gap-8 pt-40 pb-16 min-h-screen px-4">
+    <h2 class="font-duality text-4xl md:text-5xl tracking-widest select-none text-center text-stone-900
+        [text-shadow:2px_2px_8px_rgba(255,255,255,0.6)]">
+        Batalha Rural
+    </h2>
 
     <button
-        class="font-duality tracking-widest border-3 border-amber-700 rounded px-10 py-3 bg-transparent hover:bg-amber-400 transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        class="font-duality tracking-widest border-3 border-amber-700 rounded-lg px-10 py-3 bg-amber-50/80 shadow-lg
+            hover:bg-amber-400 hover:scale-105 hover:shadow-xl transition-all duration-200 cursor-pointer
+            disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
         [disabled]="creating()" (click)="createRoom()">
         @if (creating()) {
             CRIANDO...
@@ -11,9 +16,9 @@
         }
     </button>
 
-    <div class="flex gap-2 items-center">
+    <div class="flex gap-2 items-center bg-white/70 backdrop-blur-sm border border-amber-700/60 rounded-lg p-3 shadow-md">
         <input
-            class="border-2 border-amber-700 rounded px-3 py-2 font-duality tracking-widest uppercase w-32 text-center"
+            class="border-2 border-amber-700 rounded px-3 py-2 font-duality tracking-widest uppercase w-32 text-center bg-white"
             maxlength="5" placeholder="CÓDIGO" [(ngModel)]="codeInput" (keydown.enter)="joinRoom(codeInput)" />
         <button
             class="font-duality border-2 border-amber-700 rounded px-4 py-2 cursor-pointer hover:bg-amber-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
@@ -23,16 +28,17 @@
     </div>
 
     @if (errorMessage()) {
-        <p class="text-red-600 font-yusei text-center">{{ errorMessage() }}</p>
+        <p class="text-red-600 font-yusei text-center bg-white/80 rounded px-4 py-2 shadow">{{ errorMessage() }}</p>
     }
 
-    <div class="w-full max-w-md flex flex-col gap-2">
-        <h3 class="font-duality text-xl text-center">Salas abertas</h3>
+    <div class="w-full max-w-md flex flex-col gap-3 bg-white/70 backdrop-blur-sm border border-amber-700/60 rounded-xl p-4 shadow-md">
+        <h3 class="font-duality text-xl text-center tracking-wide select-none">Salas abertas</h3>
         @if (openRooms().length === 0) {
-            <p class="font-yusei text-center text-sm">Nenhuma sala aberta no momento.</p>
+            <p class="font-yusei text-center text-sm text-stone-500 italic">Nenhuma sala aberta no momento.</p>
         }
         @for (room of openRooms(); track room.code) {
-            <div class="flex justify-between items-center border border-amber-700 rounded px-4 py-2">
+            <div class="flex justify-between items-center border border-amber-700/70 bg-white rounded-lg px-4 py-2
+                hover:bg-amber-50 transition-colors">
                 <span class="font-yusei">{{ room.hostNickname }}</span>
                 <button
                     class="font-duality text-sm border border-amber-700 rounded px-3 py-1 cursor-pointer hover:bg-amber-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed"

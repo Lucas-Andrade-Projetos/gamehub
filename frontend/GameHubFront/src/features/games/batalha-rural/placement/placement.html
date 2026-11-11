@@ -1,12 +1,17 @@
-<div class="flex flex-col items-center gap-6 pt-40 pb-10 min-h-screen">
-    <h2 class="font-duality text-3xl tracking-wide select-none">{{ accountService.currentUser()?.nickname }}</h2>
+<div class="flex flex-col items-center gap-6 pt-40 pb-16 min-h-screen px-4">
+    <h2 class="font-duality text-3xl tracking-wide select-none text-center text-stone-900
+        [text-shadow:2px_2px_8px_rgba(255,255,255,0.6)]">
+        {{ accountService.currentUser()?.nickname }}
+    </h2>
 
     @if (!opponentConnected()) {
-        <p class="font-yusei text-sm text-red-600 text-center">O oponente caiu. Aguardando reconexão...</p>
+        <p class="font-yusei text-sm text-red-700 text-center bg-red-50/90 border border-red-400 rounded-lg px-4 py-2 shadow-md">
+            ⚠ O oponente caiu. Aguardando reconexão...
+        </p>
     }
 
     @if (statusMessages().length > 0) {
-        <div class="fixed top-24 right-4 w-64 max-h-32 overflow-y-auto flex flex-col gap-1 bg-white/70 border border-amber-700 rounded p-2 z-40">
+        <div class="fixed top-24 right-4 w-64 max-h-32 overflow-y-auto flex flex-col gap-1 bg-white/80 backdrop-blur-sm border border-amber-700/60 rounded-xl p-2 shadow-lg z-40">
             @for (message of statusMessages(); track $index) {
                 <p class="font-yusei text-xs text-stone-600 italic">{{ message.text }}</p>
             }
@@ -14,28 +19,34 @@
     }
 
     @if (waitingForOpponent()) {
-        <p class="font-yusei text-center">Posicionamento confirmado! Aguardando o oponente terminar...</p>
+        <p class="font-yusei text-center bg-white/80 backdrop-blur-sm border border-amber-700/60 rounded-xl px-6 py-4 shadow-md">
+            Posicionamento confirmado! Aguardando o oponente terminar...
+        </p>
     } @else {
         @if (draggingIndex() !== null) {
-            <p class="font-yusei text-sm select-none">
+            <p class="font-yusei text-sm select-none bg-amber-100/90 border border-amber-700/50 rounded-full px-4 py-1 shadow-sm">
                 Pressione <span class="font-bold">R</span> para girar a peça {{ dragDirectionArrow() }}
             </p>
         }
 
         <div class="flex flex-row items-start gap-6">
-            <div #boardGrid class="grid grid-cols-10 grid-rows-10 border-2 border-amber-800 w-[400px] h-[400px] select-none">
-                @for (y of boardRange; track y) {
-                    @for (x of boardRange; track x) {
-                        <div class="aspect-square flex items-center justify-center border border-amber-800/30 font-duality text-sm transition-colors"
-                            [class]="cellClass(x, y)">
-                            {{ cellChar(x, y) }}
-                        </div>
+            <div class="p-3 bg-amber-900/10 border-4 border-amber-900/80 rounded-xl shadow-2xl">
+                <div #boardGrid class="grid grid-cols-10 grid-rows-10 border-2 border-amber-800 w-[400px] h-[400px] select-none bg-amber-50/50">
+                    @for (y of boardRange; track y) {
+                        @for (x of boardRange; track x) {
+                            <div class="aspect-square flex items-center justify-center border border-amber-800/30 font-duality text-base transition-colors"
+                                [class]="cellClass(x, y)">
+                                {{ cellChar(x, y) }}
+                            </div>
+                        }
                     }
-                }
+                </div>
             </div>
 
             <button
-                class="font-duality tracking-wide border-2 border-amber-700 rounded px-4 py-2 h-fit cursor-pointer hover:bg-amber-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                class="font-duality tracking-wide border-2 border-amber-700 rounded-lg px-4 py-2 h-fit bg-amber-50/80 shadow-md cursor-pointer
+                    hover:bg-amber-400 hover:scale-105 transition-all duration-200
+                    disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-amber-50/80 disabled:hover:scale-100"
                 [disabled]="!allPlaced() || submitting()" (click)="finalizePlacement()">
                 @if (submitting()) {
                     ENVIANDO...
@@ -46,18 +57,20 @@
         </div>
 
         @if (errorMessage()) {
-            <p class="text-red-600 font-yusei text-center">{{ errorMessage() }}</p>
+            <p class="text-red-600 font-yusei text-center bg-white/80 rounded px-4 py-2 shadow">{{ errorMessage() }}</p>
         }
 
-        <div class="flex flex-wrap gap-3 justify-center max-w-2xl">
+        <div class="flex flex-wrap gap-3 justify-center max-w-2xl bg-white/60 backdrop-blur-sm border border-amber-700/40 rounded-xl p-4 shadow-md">
             @for (vm of tokenViewModels(); track vm.index) {
-                <div class="flex flex-col items-center gap-1 px-3 py-2 rounded border-2 border-amber-700 font-duality select-none transition-opacity"
-                    [class.opacity-40]="vm.placed" [class.cursor-grab]="!vm.placed"
+                <div class="flex flex-col items-center gap-1 px-3 py-2 rounded-lg border-2 border-amber-700 bg-white/70 font-duality select-none
+                    shadow-sm transition-all"
+                    [class.opacity-40]="vm.placed" [class.cursor-grab]="!vm.placed" [class.hover:shadow-md]="!vm.placed"
+                    [class.hover:-translate-y-0.5]="!vm.placed"
                     (mousedown)="onPieceMouseDown($event, vm.index)">
-                    <span class="text-2xl">{{ vm.token.character }}</span>
+                    <span class="text-2xl">{{ tokenEmoji(vm.token.character) }}</span>
                     <span class="text-xs">{{ vm.token.name }} ({{ vm.token.size }})</span>
                     @if (vm.placed) {
-                        <span class="text-[10px] text-green-700">posicionado</span>
+                        <span class="text-[10px] text-green-700 font-yusei">posicionado</span>
                         @if (vm.token.size > 1) {
                             <button class="text-xs underline cursor-pointer hover:text-amber-700"
                                 (mousedown)="$event.stopPropagation()" (click)="rotatePlacedToken(vm.index)">

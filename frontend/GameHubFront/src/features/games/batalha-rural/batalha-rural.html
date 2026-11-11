@@ -1,6 +1,10 @@
-<div class="min-h-screen">
+<div class="min-h-screen w-full bgImg bg-fixed">
     @if (connectError()) {
-        <p class="text-red-600 font-yusei text-center pt-40">{{ connectError() }}</p>
+        <div class="min-h-screen flex items-center justify-center px-6">
+            <p class="font-yusei text-center text-red-700 bg-white/85 backdrop-blur-sm border-2 border-red-400 rounded-xl px-6 py-4 shadow-lg max-w-md">
+                {{ connectError() }}
+            </p>
+        </div>
     } @else {
         @switch (phase()) {
             @case ('room-select') {
